@@ -3,37 +3,41 @@
 ## Project Tech Stack
 When working on this interview preparation project, always adhere to the following technology stack and guidelines:
 
-1. **Next.js** - Use Next.js with the App Router
-   - Documentation: [https://nextjs.org/docs](https://nextjs.org/docs)
-   - Always leverage React Server Components (RSCs) where appropriate
-   - Follow best practices for routing and data fetching
+1.  **React** - Use React for building user interfaces.
+    - Documentation: [https://react.dev/](https://react.dev/)
+    - Follow modern React patterns (Hooks, Context API).
 
-2. **TypeScript**
-   - Documentation: [https://www.typescriptlang.org/docs/](https://www.typescriptlang.org/docs/)
-   - Maintain strict type checking
-   - Use proper interfaces and type definitions
+2.  **Next.js** - Use Next.js with the App Router
+    - Documentation: [https://nextjs.org/docs](https://nextjs.org/docs)
+    - Always leverage React Server Components (RSCs) where appropriate
+    - Follow best practices for routing and data fetching
 
-3. **Tailwind CSS**
-   - Documentation: [https://tailwindcss.com/docs](https://tailwindcss.com/docs)
-   - Use utility classes consistently
-   - Leverage the tailwind-merge library for conditional classes
+3.  **TypeScript**
+    - Documentation: [https://www.typescriptlang.org/docs/](https://www.typescriptlang.org/docs/)
+    - Maintain strict type checking
+    - Use proper interfaces and type definitions
 
-4. **shadcn/ui**
-   - Documentation: [https://ui.shadcn.com/docs](https://ui.shadcn.com/docs)
-   - Install components using the shadcn CLI
-   - Customize components as needed while maintaining accessibility
+4.  **Tailwind CSS**
+    - Documentation: [https://tailwindcss.com/docs](https://tailwindcss.com/docs)
+    - Use utility classes consistently
+    - Leverage the tailwind-merge library for conditional classes
 
-5. **Vercel AI SDK**
-   - Documentation: [https://sdk.vercel.ai/docs](https://sdk.vercel.ai/docs)
-   - Follow their guides at [https://sdk.vercel.ai/docs/guides](https://sdk.vercel.ai/docs/guides)
-   - Check examples at [https://sdk.vercel.ai/examples](https://sdk.vercel.ai/examples)
-   - Stay updated with the latest AI SDK features and best practices
+5.  **shadcn/ui**
+    - Documentation: [https://ui.shadcn.com/docs](https://ui.shadcn.com/docs)
+    - Install components using the shadcn CLI
+    - Customize components as needed while maintaining accessibility
 
-6. **Firebase**
-   - Documentation: [https://firebase.google.com/docs](https://firebase.google.com/docs)
-   - Use Firebase SDK v10+ for web
-   - Implement proper authentication and security rules
-   - Consider Firestore for real-time data needs
+6.  **Vercel AI SDK**
+    - Documentation: [https://sdk.vercel.ai/docs](https://sdk.vercel.ai/docs)
+    - Follow their guides at [https://sdk.vercel.ai/docs/guides](https://sdk.vercel.ai/docs/guides)
+    - Check examples at [https://sdk.vercel.ai/examples](https://sdk.vercel.ai/examples)
+    - Stay updated with the latest AI SDK features and best practices
+
+7.  **Firebase**
+    - Documentation: [https://firebase.google.com/docs](https://firebase.google.com/docs)
+    - Use Firebase SDK v10+ for web
+    - Implement proper authentication and security rules
+    - Consider Firestore for real-time data needs
 
 ## Important Development Guidelines
 - **ALWAYS use pnpm** for package management
