@@ -3,61 +3,38 @@
 import type React from "react"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { GithubIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+
+import { auth, googleProvider, signInWithPopup } from "@/lib/fireabase"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
-
-    // Simulate API call
+  const handleGoogleSignIn = async () => {
     try {
-      // This is where you would make your actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // For demo purposes, let's add a simple validation
-      if (email === "test@example.com" && password === "password") {
-        toast.success("Login successful", {
-          description: "Redirecting to dashboard...",
-        })
-        router.push("/dashboard")
-      } else {
-        setError("Invalid email or password")
-      }
-    } catch (err) {
-      toast.error("An error occurred", {
-        description: "Please try again."
+      setIsLoading(true)
+      toast.loading("Google authentication initiated", {
+        description: "Redirecting to authentication provider...",
       })
-      setError("An error occurred. Please try again.")
+      const result = await signInWithPopup(auth, googleProvider)
+      // The signed-in user info.
+      const user = result.user
+      toast.success("Authentication successful", {
+        description: `Welcome, ${user.displayName || "user"}!`,
+      })
+      router.push("/interview-page")
+    } catch (error: any) {
+      console.error("Google sign-in error:", error)
+      toast.error("Authentication failed", {
+        description: error.message || "Failed to sign in with Google",
+      })
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleOAuthLogin = (provider: string) => {
-    setIsLoading(true)
-    // Simulate OAuth login
-    setTimeout(() => {
-      toast.loading(`${provider} login initiated`, {
-        description: "Redirecting to authentication provider...",
-      })
-      // In a real app, you would redirect to the OAuth provider here
-    }, 1000)
   }
 
   return (
@@ -68,75 +45,18 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-gray-600">Sign in to your interview prep account</p>
         </div>
 
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <Label htmlFor="email" className="block text-sm font-medium">
-                Email address
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="block text-sm font-medium">
-                  Password
-                </Label>
-                <Link href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1"
-              />
-            </div>
+        <div className="mt-8 space-y-6">
+          <div className="flex items-center justify-center">
+            <p className="text-sm text-gray-500">Continue with</p>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-gray-50 px-2 text-gray-500">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex justify-center">
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOAuthLogin("Google")}
+              onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 w-full max-w-xs"
             >
               <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                 <path
@@ -156,27 +76,10 @@ export default function LoginPage() {
                   fill="#34A853"
                 />
               </svg>
-              Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOAuthLogin("GitHub")}
-              disabled={isLoading}
-              className="flex items-center justify-center gap-2"
-            >
-              <GithubIcon className="h-5 w-5" />
-              GitHub
+              Sign in with Google
             </Button>
           </div>
-        </form>
-
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign up
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   )

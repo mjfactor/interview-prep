@@ -46,6 +46,8 @@ When working on this interview preparation project, always adhere to the followi
 - Implement responsive designs that work across devices
 - Write clean, maintainable, and well-documented code
 - Stay current with version updates for all libraries
+- Use Async/await with try/catch instead of callback hell
+- Always use Best Practice
 
 ## Project Setup
 When installing new packages:
