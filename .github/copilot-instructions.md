@@ -29,8 +29,8 @@ When working on this interview preparation project, always adhere to the followi
 
 6.  **Vercel AI SDK**
     - Documentation: [https://sdk.vercel.ai/docs](https://sdk.vercel.ai/docs)
-    - Follow their guides at [https://sdk.vercel.ai/docs/guides](https://sdk.vercel.ai/docs/guides)
-    - Check examples at [https://sdk.vercel.ai/examples](https://sdk.vercel.ai/examples)
+    - Check useChat and streamtext docs at [useChat](https://sdk.vercel.ai/docs/reference/ai-sdk-ui/use-chat) and [streamtext] (https://sdk.vercel.ai/docs/reference/ai-sdk-core/stream-text)
+    - Check useObject and streamobject docs at [useObject](https://sdk.vercel.ai/docs/reference/ai-sdk-ui/use-object) and [streamobject](https://sdk.vercel.ai/docs/reference/ai-sdk-core/stream-object)
     - Stay updated with the latest AI SDK features and best practices
 
 7.  **Firebase**
