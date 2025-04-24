@@ -8,7 +8,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 
-import { auth, googleProvider, signInWithPopup } from "@/lib/fireabase"
+import { auth, googleProvider, signInWithPopup, addDoc, collection, db, doc, setDoc } from "@/lib/fireabase"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -17,16 +17,32 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true)
-      toast.loading("Google authentication initiated", {
-        description: "Redirecting to authentication provider...",
-      })
       const result = await signInWithPopup(auth, googleProvider)
-      // The signed-in user info.
       const user = result.user
-      toast.success("Authentication successful", {
-        description: `Welcome, ${user.displayName || "user"}!`,
-      })
-      router.push("/interview-page")
+
+      // Store user in Firestore
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          lastLogin: new Date().toISOString(),
+        }, { merge: true });
+
+        toast.success("Authentication successful", {
+          description: `Welcome, ${user.displayName || "user"}!`,
+        })
+
+        router.push("/interview-page")
+      } catch (firestoreError: any) {
+        console.error("Firestore error:", firestoreError)
+        // Still allow login even if Firestore storage fails
+        toast.warning("Signed in but profile storage failed", {
+          description: "You're signed in, but we couldn't update your profile data.",
+        })
+        router.push("/interview-page")
+      }
     } catch (error: any) {
       console.error("Google sign-in error:", error)
       toast.error("Authentication failed", {
