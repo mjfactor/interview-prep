@@ -1,11 +1,11 @@
 # Active Context
 
 ## Current Work Focus
-- Initial development of interview question generation functionality
-- Setting up basic user interface components and layout
-- Implementing authentication flow with Firebase
-- Creating core interview practice experience
-- Implementing Firestore database integration for user data storage
+- **Integrate interview settings UI with the backend Gemini API.**
+- Implement the actual interview session UI (displaying questions, handling responses).
+- Define and implement Firestore security rules.
+- Enhance user profile and preference management.
+- Develop response evaluation and feedback mechanisms.
 
 ## Recent Changes
 - Project initialization with Next.js 14 and TypeScript
@@ -15,10 +15,12 @@
 - Added API route for question generation
 - Implemented Firestore integration to store user profiles after OAuth authentication
 - Added error handling for Firestore operations to ensure graceful fallbacks
+- **Created the interview settings form UI (`interview-page/page.tsx`) using Shadcn components (Input, Label, Button, Select) and React state.**
+- **Implemented tech stack input with add/remove functionality and dynamic suggestions.**
 
 ## Next Steps
-1. Complete the interview question generation API integration with Gemini
-2. Implement interview session UI with question and answer components
+1. **Connect the interview settings form to the `/api/generate-question` endpoint.**
+2. **Implement the UI to display generated questions and allow user input for answers.**
 3. Set up user profile and preference management
 4. Create progress tracking and history views
 5. Enhance feedback mechanisms for user responses
@@ -41,6 +43,7 @@
 - Following Next.js app directory structure for routing
 - Implementing responsive design with mobile-first approach
 - Leveraging Shadcn UI components for consistent UI elements
+- **Using React functional components with `useState` hook for managing component-level state (e.g., form inputs, loading status, tech stack).**
 - Using Firebase for authentication and data persistence
   - Using setDoc with merge:true for updating user profiles
   - Using user.uid as document ID for direct user document access

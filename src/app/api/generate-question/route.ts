@@ -16,7 +16,7 @@ type RequestBody = {
 export async function POST(req: Request) {
     try {
         // Parse request body
-        const { jobRole, count, category, experience}: RequestBody = await req.json();
+        const { jobRole, count, category, experience }: RequestBody = await req.json();
 
         const prompt = `Generate ${count} realistic interview ${category} question for a ${experience} ${jobRole} position. 
                         Make sure the questions are challenging but appropriate for the experience level.`;
