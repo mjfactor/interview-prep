@@ -78,11 +78,18 @@ export default function InterviewPage() {
         }
     }
     // Using Vercel AI SDK's useObject to handle structured data generation
-    const { object, submit, isLoading: isGenerating, error } = useObject({
+    const { object, submit, isLoading: isGenerating, error, } = useObject({
         api: '/api/generate-question',
         schema: z.object({
             questions: z.array(z.string().describe('Interview questions')),
         }),
+        onFinish({ object, error }) {
+            // typed object, undefined if schema validation fails:
+            console.log('Object generation completed:', object);
+
+            // error, undefined if schema validation succeeds:
+            console.log('Schema validation error:', error);
+        },
     });
 
     // Handle form submission

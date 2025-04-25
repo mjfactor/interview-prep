@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { streamObject } from 'ai'; // Changed from generateObject to streamObject
+import { generateObject } from 'ai'; // Changed back to generateObject
 import { z } from 'zod';
 
 // Allow streaming responses up to 30 seconds
@@ -22,8 +22,8 @@ export async function POST(req: Request) {
         const prompt = `Generate ${count || 3} realistic interview ${category || 'technical'} questions based on the tech stack: ${techStack?.join(', ')} for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 
                         Make sure the questions are challenging but appropriate for the experience level.`;
 
-        // Use streamObject instead of generateObject for streaming responses
-        const result = streamObject({
+        // Use generateObject instead of streamObject for a complete response
+        const object = await generateObject({
             model: google('gemini-2.0-flash-lite'),
             schemaName: 'InterviewQuestions',
             schemaDescription: 'A collection of interview questions with details',
@@ -32,9 +32,7 @@ export async function POST(req: Request) {
             }),
             prompt,
         });
-
-        // Return a streaming response
-        return result.toTextStreamResponse();
+        return object.toJsonResponse();
     } catch (error) {
         console.error('Error generating interview questions:', error);
         return Response.json(
