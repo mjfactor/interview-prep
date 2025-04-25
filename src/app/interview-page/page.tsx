@@ -4,6 +4,8 @@ import React, { useState, KeyboardEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { experimental_useObject as useObject } from '@ai-sdk/react';
+import { z } from 'zod'
 import { X } from 'lucide-react'
 
 // Experience level options
@@ -40,7 +42,6 @@ export default function InterviewPage() {
     const [experience, setExperience] = useState<string>('Mid-level')
     const [category, setCategory] = useState<string>('technical')
     const [count, setCount] = useState<number>(3)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     // Tech stack state
     const [techStack, setTechStack] = useState<string[]>(['React', 'TypeScript'])
@@ -76,24 +77,29 @@ export default function InterviewPage() {
             setShowSuggestions(false)
         }
     }
+    // Using Vercel AI SDK's useObject to handle structured data generation
+    const { object, submit, isLoading: isGenerating, error } = useObject({
+        api: '/api/generate-question',
+        schema: z.object({
+            questions: z.array(z.string().describe('Interview questions')),
+        }),
+    });
 
     // Handle form submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        setIsLoading(true)
 
-        console.log({
+        // Structure the data to pass to the AI API
+        const requestBody = {
             jobRole,
-            experience,
-            category,
             count,
+            category,
+            experience,
             techStack
-        })
+        };
 
-        // Simulate API call delay
-        setTimeout(() => {
-            setIsLoading(false)
-        }, 2000)
+        // Use the submit function from useObject hook to send the request to the API
+        submit(requestBody);
     }
 
     return (
@@ -235,13 +241,37 @@ export default function InterviewPage() {
                             <Button
                                 type="submit"
                                 className="w-full"
-                                disabled={isLoading}
+                                disabled={isGenerating}
                             >
-                                {isLoading ? 'Generating...' : 'Generate Questions'}
+                                {isGenerating ? 'Generating...' : 'Generate Questions'}
                             </Button>
                         </form>
                     </div>
                 </div>
+
+                {/* Results Section */}
+                {error && (
+                    <div className="mt-8 p-4 border border-red-300 bg-red-50 rounded-lg">
+                        <p className="text-red-500 font-medium">Error generating questions</p>
+                        <p className="text-sm">{error.message || "Please try again"}</p>
+                    </div>
+                )}
+
+                {object?.questions && object.questions.length > 0 && (
+                    <div className="mt-8">
+                        <div className="bg-card p-6 rounded-lg shadow-sm border">
+                            <h2 className="text-xl font-semibold mb-4">Generated Questions</h2>
+                            <ul className="space-y-4">
+                                {object.questions.map((question, index) => (
+                                    <li key={index} className="p-3 bg-muted/40 rounded-md">
+                                        <p className="font-medium">Q{index + 1}:</p>
+                                        <p>{question}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
