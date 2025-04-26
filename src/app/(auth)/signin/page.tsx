@@ -8,7 +8,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 
-import { auth, googleProvider, signInWithPopup, addDoc, collection, db, doc, setDoc } from "@/lib/fireabase"
+import { auth, googleProvider, signInWithPopup, db, doc, setDoc } from "@/lib/fireabase"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -100,3 +100,4 @@ export default function LoginPage() {
     </div>
   )
 }
+
