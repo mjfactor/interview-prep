@@ -2,17 +2,33 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-
 import { Button } from "@/components/ui/button"
-
-import { auth, googleProvider, signInWithPopup, db, doc, setDoc } from "@/lib/fireabase"
+import { auth, googleProvider, signInWithPopup, db, doc, setDoc, onAuthStateChanged } from "@/lib/firebase"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add state to track auth check
   const router = useRouter()
+
+  // Check if user is already logged in when component mounts
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to interview page
+        // The component will likely unmount or redirect, so no need to set isCheckingAuth
+        router.push("/interview-page")
+      } else {
+        // No user is signed in, finished checking
+        setIsCheckingAuth(false);
+      }
+    })
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe()
+  }, [router])
 
   const handleGoogleSignIn = async () => {
     try {
@@ -53,6 +69,12 @@ export default function LoginPage() {
     }
   }
 
+  // Don't render anything until the auth check is complete
+  if (isCheckingAuth) {
+    return null; // Or a loading spinner component
+  }
+
+  // Render the login page only if not checking auth and user is not logged in
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">

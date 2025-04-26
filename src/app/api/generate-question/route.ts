@@ -1,7 +1,7 @@
 import { google } from '@ai-sdk/google';
 import { generateObject } from 'ai'; // Changed back to generateObject
 import { z } from 'zod';
-import { db, collection, addDoc, serverTimestamp } from '@/lib/fireabase';
+import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -13,13 +13,13 @@ type RequestBody = {
     category?: string;
     count?: number;
     techStack?: string[];
-    userId: string; // Add userId to identify the current user
+    userId?: any
 };
 
 export async function POST(req: Request) {
     try {
         // Parse request body 
-        const { jobRole, count, category, experience, techStack }: RequestBody = await req.json();
+        const { jobRole, count, category, experience, techStack, userId }: RequestBody = await req.json();
 
 
         const prompt = `Generate ${count || 3} realistic interview ${category || 'technical'} questions based on the tech stack: ${techStack?.join(', ')} for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 
@@ -46,17 +46,15 @@ export async function POST(req: Request) {
                 techStack: techStack,
                 questions: object.questions,
                 createdAt: serverTimestamp(),
+                uid: userId
             };
 
             // Add to the interviewQuestions collection
             await addDoc(collection(db, "interviewQuestions"), questionData);
-
-            return Response.json(object)
         } catch (dbError) {
             console.error('Error storing questions in database:', dbError);
-
-
         }
+        return Response.json(object)
     } catch (error) {
         console.error('Error generating interview questions:', error);
         return Response.json(

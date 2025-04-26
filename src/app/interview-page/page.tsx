@@ -1,12 +1,15 @@
 "use client"
 
-import React, { useState, KeyboardEvent } from 'react'
+import React, { useState, KeyboardEvent, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { z } from 'zod'
-import { X } from 'lucide-react'
+import { X, LogOut } from 'lucide-react'
+import AuthProtection from '@/components/auth/AuthProtection'
+import { getAuth, signOut, onAuthStateChanged, User } from '@/lib/firebase'
+
 
 // Experience level options
 const experienceLevels = [
@@ -36,7 +39,32 @@ const techStackSuggestions = [
     "PostgreSQL", "MongoDB", "MySQL", "Redis", "Firebase"
 ]
 
+
 export default function InterviewPage() {
+    const auth = getAuth();
+    // Use state to store the user, updated by the observer
+    const [user, setUser] = useState<User | null>(null);
+
+    // Set up the auth state observer
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, [auth]);
+
+    // Handle sign out
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            // The AuthProtection component will automatically redirect to signin page
+        } catch (error) {
+            console.error("Error signing out:", error);
+        }
+    };
+
     // Form state
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
@@ -77,6 +105,7 @@ export default function InterviewPage() {
             setShowSuggestions(false)
         }
     }
+
     // Using Vercel AI SDK's useObject to handle structured data generation
     const { object, submit, isLoading: isGenerating, error, } = useObject({
         api: '/api/generate-question',
@@ -96,13 +125,21 @@ export default function InterviewPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
+        // Ensure user is available before submitting
+        if (!user) {
+            console.error("User not authenticated");
+            // Optionally show a message to the user
+            return;
+        }
+
         // Structure the data to pass to the AI API
         const requestBody = {
             jobRole,
             count,
             category,
             experience,
-            techStack
+            techStack,
+            userId: user.uid, // Use the user state
         };
 
         // Use the submit function from useObject hook to send the request to the API
@@ -110,176 +147,188 @@ export default function InterviewPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold">Interview Question Generator</h1>
-                <p className="text-muted-foreground mt-2">
-                    Generate tailored interview questions for your next job interview
-                </p>
-            </header>
-
-            <div className="max-w-md mx-auto">
-                {/* Form Section */}
-                <div className="space-y-6">
-                    <div className="bg-card p-6 rounded-lg shadow-sm border">
-                        <h2 className="text-xl font-semibold mb-4">Question Settings</h2>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="jobRole">Job Role</Label>
-                                <Input
-                                    id="jobRole"
-                                    value={jobRole}
-                                    onChange={(e) => setJobRole(e.target.value)}
-                                    placeholder="e.g. Frontend Developer"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="experience">Experience Level</Label>
-                                <select
-                                    id="experience"
-                                    value={experience}
-                                    onChange={(e) => setExperience(e.target.value)}
-                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {experienceLevels.map((level) => (
-                                        <option key={level.value} value={level.value}>
-                                            {level.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="category">Question Category</Label>
-                                <select
-                                    id="category"
-                                    value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {categories.map((cat) => (
-                                        <option key={cat.value} value={cat.value}>
-                                            {cat.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Tech Stack Input */}
-                            <div className="space-y-2">
-                                <Label htmlFor="techStack">Tech Stack</Label>
-                                <div className="relative">
-                                    <div className="flex flex-wrap gap-2 p-2 rounded-md border border-input bg-transparent mb-1">
-                                        {techStack.map((tech) => (
-                                            <div
-                                                key={tech}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs"
-                                            >
-                                                <span>{tech}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeTech(tech)}
-                                                    className="hover:bg-secondary-foreground/10 rounded-full p-0.5"
-                                                >
-                                                    <X size={12} />
-                                                    <span className="sr-only">Remove {tech}</span>
-                                                </button>
-                                            </div>
-                                        ))}
-                                        <Input
-                                            id="techInput"
-                                            value={techInput}
-                                            onChange={(e) => {
-                                                setTechInput(e.target.value)
-                                                setShowSuggestions(true)
-                                            }}
-                                            onKeyDown={handleKeyDown}
-                                            onBlur={() => {
-                                                // Delay hiding suggestions to allow clicking them
-                                                setTimeout(() => setShowSuggestions(false), 200)
-                                            }}
-                                            onFocus={() => setShowSuggestions(true)}
-                                            placeholder="Add technology..."
-                                            className="flex-grow border-0 shadow-none focus-visible:ring-0 p-0 h-7 min-w-[120px]"
-                                        />
-                                    </div>
-
-                                    {/* Tech suggestions dropdown */}
-                                    {showSuggestions && techInput.length > 0 && filteredSuggestions.length > 0 && (
-                                        <div className="absolute z-10 w-full mt-1 rounded-md border border-input bg-background shadow-md">
-                                            <ul className="py-1">
-                                                {filteredSuggestions.map((suggestion) => (
-                                                    <li key={suggestion}>
-                                                        <button
-                                                            type="button"
-                                                            className="w-full text-left px-3 py-1.5 text-sm hover:bg-secondary/50"
-                                                            onClick={() => {
-                                                                addTech(suggestion)
-                                                                setShowSuggestions(false)
-                                                            }}
-                                                        >
-                                                            {suggestion}
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Press Enter to add a technology or select from suggestions
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="count">Number of Questions</Label>
-                                <Input
-                                    id="count"
-                                    type="number"
-                                    min="1"
-                                    max="10"
-                                    value={count}
-                                    onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={isGenerating}
-                            >
-                                {isGenerating ? 'Generating...' : 'Generate Questions'}
-                            </Button>
-                        </form>
+        <AuthProtection>
+            <div className="container mx-auto px-4 py-8">
+                <header className="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold">Interview Question Generator</h1>
+                        <p className="text-muted-foreground mt-2">
+                            Generate tailored interview questions for your next job interview
+                        </p>
                     </div>
-                </div>
+                    <Button
+                        variant="outline"
+                        onClick={handleSignOut}
+                        className="flex items-center gap-2"
+                    >
+                        <LogOut size={16} />
+                        Sign Out
+                    </Button>
+                </header>
 
-                {/* Results Section */}
-                {error && (
-                    <div className="mt-8 p-4 border border-red-300 bg-red-50 rounded-lg">
-                        <p className="text-red-500 font-medium">Error generating questions</p>
-                        <p className="text-sm">{error.message || "Please try again"}</p>
-                    </div>
-                )}
-
-                {object?.questions && object.questions.length > 0 && (
-                    <div className="mt-8">
+                <div className="max-w-md mx-auto">
+                    {/* Form Section */}
+                    <div className="space-y-6">
                         <div className="bg-card p-6 rounded-lg shadow-sm border">
-                            <h2 className="text-xl font-semibold mb-4">Generated Questions</h2>
-                            <ul className="space-y-4">
-                                {object.questions.map((question, index) => (
-                                    <li key={index} className="p-3 bg-muted/40 rounded-md">
-                                        <p className="font-medium">Q{index + 1}:</p>
-                                        <p>{question}</p>
-                                    </li>
-                                ))}
-                            </ul>
+                            <h2 className="text-xl font-semibold mb-4">Question Settings</h2>
+
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="jobRole">Job Role</Label>
+                                    <Input
+                                        id="jobRole"
+                                        value={jobRole}
+                                        onChange={(e) => setJobRole(e.target.value)}
+                                        placeholder="e.g. Frontend Developer"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="experience">Experience Level</Label>
+                                    <select
+                                        id="experience"
+                                        value={experience}
+                                        onChange={(e) => setExperience(e.target.value)}
+                                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {experienceLevels.map((level) => (
+                                            <option key={level.value} value={level.value}>
+                                                {level.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="category">Question Category</Label>
+                                    <select
+                                        id="category"
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {categories.map((cat) => (
+                                            <option key={cat.value} value={cat.value}>
+                                                {cat.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Tech Stack Input */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="techStack">Tech Stack</Label>
+                                    <div className="relative">
+                                        <div className="flex flex-wrap gap-2 p-2 rounded-md border border-input bg-transparent mb-1">
+                                            {techStack.map((tech) => (
+                                                <div
+                                                    key={tech}
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs"
+                                                >
+                                                    <span>{tech}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeTech(tech)}
+                                                        className="hover:bg-secondary-foreground/10 rounded-full p-0.5"
+                                                    >
+                                                        <X size={12} />
+                                                        <span className="sr-only">Remove {tech}</span>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <Input
+                                                id="techInput"
+                                                value={techInput}
+                                                onChange={(e) => {
+                                                    setTechInput(e.target.value)
+                                                    setShowSuggestions(true)
+                                                }}
+                                                onKeyDown={handleKeyDown}
+                                                onBlur={() => {
+                                                    // Delay hiding suggestions to allow clicking them
+                                                    setTimeout(() => setShowSuggestions(false), 200)
+                                                }}
+                                                onFocus={() => setShowSuggestions(true)}
+                                                placeholder="Add technology..."
+                                                className="flex-grow border-0 shadow-none focus-visible:ring-0 p-0 h-7 min-w-[120px]"
+                                            />
+                                        </div>
+
+                                        {/* Tech suggestions dropdown */}
+                                        {showSuggestions && techInput.length > 0 && filteredSuggestions.length > 0 && (
+                                            <div className="absolute z-10 w-full mt-1 rounded-md border border-input bg-background shadow-md">
+                                                <ul className="py-1">
+                                                    {filteredSuggestions.map((suggestion) => (
+                                                        <li key={suggestion}>
+                                                            <button
+                                                                type="button"
+                                                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-secondary/50"
+                                                                onClick={() => {
+                                                                    addTech(suggestion)
+                                                                    setShowSuggestions(false)
+                                                                }}
+                                                            >
+                                                                {suggestion}
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Press Enter to add a technology or select from suggestions
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="count">Number of Questions</Label>
+                                    <Input
+                                        id="count"
+                                        type="number"
+                                        min="1"
+                                        max="10"
+                                        value={count}
+                                        onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                                    />
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={isGenerating}
+                                >
+                                    {isGenerating ? 'Generating...' : 'Generate Questions'}
+                                </Button>
+                            </form>
                         </div>
                     </div>
-                )}
+
+                    {/* Results Section */}
+                    {error && (
+                        <div className="mt-8 p-4 border border-red-300 bg-red-50 rounded-lg">
+                            <p className="text-red-500 font-medium">Error generating questions</p>
+                            <p className="text-sm">{error.message || "Please try again"}</p>
+                        </div>
+                    )}
+
+                    {object?.questions && object.questions.length > 0 && (
+                        <div className="mt-8">
+                            <div className="bg-card p-6 rounded-lg shadow-sm border">
+                                <h2 className="text-xl font-semibold mb-4">Generated Questions</h2>
+                                <ul className="space-y-4">
+                                    {object.questions.map((question, index) => (
+                                        <li key={index} className="p-3 bg-muted/40 rounded-md">
+                                            <p className="font-medium">Q{index + 1}:</p>
+                                            <p>{question}</p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </AuthProtection>
     )
 }
