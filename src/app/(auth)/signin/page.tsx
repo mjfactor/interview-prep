@@ -51,18 +51,21 @@ export default function LoginPage() {
         })
 
         router.push("/interview-page")
-      } catch (firestoreError: any) {
+      } catch (firestoreError) {
         console.error("Firestore error:", firestoreError)
-        // Still allow login even if Firestore storage fails
         toast.warning("Signed in but profile storage failed", {
           description: "You're signed in, but we couldn't update your profile data.",
         })
         router.push("/interview-page")
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Google sign-in error:", error)
+      let errorMessage = "Failed to sign in with Google"
+      if (error instanceof Error) {
+        errorMessage = error.message
+      }
       toast.error("Authentication failed", {
-        description: error.message || "Failed to sign in with Google",
+        description: errorMessage,
       })
     } finally {
       setIsLoading(false)

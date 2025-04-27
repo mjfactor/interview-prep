@@ -3,16 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
 import {
     collection,
-    getDocs,
     doc,
     setDoc,
-    arrayUnion,
-    arrayRemove,
-    onSnapshot,
-    query,
-    where,
-    documentId,
-    QuerySnapshot,
     addDoc,
     getFirestore,
     serverTimestamp,

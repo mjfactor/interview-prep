@@ -13,7 +13,7 @@ type RequestBody = {
     category?: string;
     count?: number;
     techStack?: string[];
-    userId?: any
+    userId?: string
 };
 
 export async function POST(req: Request) {

@@ -1,0 +1,37 @@
+flowchart TB
+    subgraph Frontend
+        direction LR
+        SignIn["Sign In Page"]
+        InterviewPage["Interview Page"]
+        QSettings["Question Settings Form"]
+        QResults["Generated Questions Display"]
+    end
+
+    subgraph Backend
+        direction LR
+        API["API Route
+        /api/generate-question"]
+        AIGen["AI Question Generator
+        (generateObject)"]
+    end
+
+    subgraph ExternalServices
+        direction LR
+        Firebase["Firebase
+        Authentication & Firestore"]
+        GoogleAI["Google Gemini AI
+        (gemini-2.0-flash-lite)"]
+    end
+
+    %% Flow connections
+    SignIn -->|"Authentication"| Firebase
+    Firebase -->|"Auth Success"| InterviewPage
+    InterviewPage -->|"Contains"| QSettings
+    QSettings -->|"Form Submission"| API
+    API -->|"Prompt"| AIGen
+    AIGen -->|"Schema Request"| GoogleAI
+    GoogleAI -->|"Returns Questions"| AIGen
+    AIGen -->|"Returns Object"| API
+    API -->|"Store Questions"| Firebase
+    API -->|"Return Questions"| QResults
+    InterviewPage -->|"Displays"| QResults
