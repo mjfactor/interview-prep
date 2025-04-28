@@ -8,6 +8,7 @@ import {
     addDoc,
     getFirestore,
     serverTimestamp,
+    getDoc
 
 } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
@@ -45,6 +46,7 @@ export {
     signOut,
     getAuth,
     onAuthStateChanged,
+    getDoc
 
 };
 

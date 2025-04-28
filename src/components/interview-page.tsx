@@ -1,8 +1,10 @@
+"use client"
+
 import React from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default function InterviewPage() {
+export default function InterviewPage({ interviewId }: { interviewId: string }) {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
             <Card className="w-full max-w-md">
