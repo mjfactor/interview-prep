@@ -5,23 +5,26 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { experimental_useObject as useObject } from '@ai-sdk/react';
+
 import { z } from 'zod'
 import { X, LogOut } from 'lucide-react'
 import AuthProtection from '@/lib/auth/AuthProtection'
 import { getAuth, signOut, onAuthStateChanged, User } from '@/lib/firebase'
-
+import { useRouter } from 'next/navigation'
+import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
 // Define the props interface
-type InterviewPageProps = {
+type GenerateQuestionProps = {
     experienceLevels: Array<{ value: string, label: string }>;
     categories: Array<{ value: string, label: string }>;
     techStackSuggestions: string[];
 }
 
-export default function InterviewPage({
+export default function GenerateQuestion({
     experienceLevels,
     categories,
     techStackSuggestions
-}: InterviewPageProps) {
+}: GenerateQuestionProps) {
+    const router = useRouter()
     const auth = getAuth();
     // Use state to store the user, updated by the observer
     const [user, setUser] = useState<User | null>(null);
@@ -50,7 +53,7 @@ export default function InterviewPage({
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
     const [category, setCategory] = useState<string>('technical')
-    const [count, setCount] = useState<number>(3)
+    const [count, setCount] = useState<number>(10)
 
     // Tech stack state
     const [techStack, setTechStack] = useState<string[]>(['React', 'TypeScript'])
@@ -88,30 +91,46 @@ export default function InterviewPage({
     }
 
     // Using Vercel AI SDK's useObject to handle structured data generation
-    const { object, submit, isLoading: isGenerating, error, } = useObject({
+    const { submit, isLoading: isGenerating } = useObject({
         api: '/api/generate-question',
         schema: z.object({
             questions: z.array(z.string().describe('Interview questions')),
         }),
-        onFinish({ object, error }) {
-            // typed object, undefined if schema validation fails:
-            console.log('Object generation completed:', object);
 
-            // error, undefined if schema validation succeeds:
-            console.log('Schema validation error:', error);
+        async onFinish({ object }) { // Add async here
+            if (!object?.questions) {
+                console.error("No questions generated.");
+                // Optionally, show an error message to the user
+                return;
+            }
+            try {
+                const questionData = {
+                    jobRole: jobRole,
+                    experience: experience,
+                    category: category,
+                    count: count,
+                    techStack: techStack,
+                    questions: object.questions,
+                    createdAt: serverTimestamp(),
+                    uid: user!.uid
+                };
+
+                // Add to the interviewQuestions collection (await works here now)
+                const docRef = await addDoc(collection(db, "interviewQuestions"), questionData);
+                router.push(`/interview-page/${docRef.id}`);
+            } catch (dbError) {
+                console.error('Error storing questions in database:', dbError);
+                // Optionally, show an error message to the user
+            }
+        },
+        onError(error) {
+            console.error("Error generating questions:", error)
         },
     });
 
     // Handle form submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-
-        // Ensure user is available before submitting
-        if (!user) {
-            console.error("User not authenticated");
-            // Optionally show a message to the user
-            return;
-        }
 
         // Structure the data to pass to the AI API
         const requestBody = {
@@ -120,7 +139,7 @@ export default function InterviewPage({
             category,
             experience,
             techStack,
-            userId: user.uid, // Use the user state
+            userId: user!.uid, // Use the user state
         };
 
         // Use the submit function from useObject hook to send the request to the API
@@ -284,30 +303,6 @@ export default function InterviewPage({
                             </form>
                         </div>
                     </div>
-
-                    {/* Results Section */}
-                    {error && (
-                        <div className="mt-8 p-4 border border-red-300 bg-red-50 rounded-lg">
-                            <p className="text-red-500 font-medium">Error generating questions</p>
-                            <p className="text-sm">{error.message || "Please try again"}</p>
-                        </div>
-                    )}
-
-                    {object?.questions && object.questions.length > 0 && (
-                        <div className="mt-8">
-                            <div className="bg-card p-6 rounded-lg shadow-sm border">
-                                <h2 className="text-xl font-semibold mb-4">Generated Questions</h2>
-                                <ul className="space-y-4">
-                                    {object.questions.map((question, index) => (
-                                        <li key={index} className="p-3 bg-muted/40 rounded-md">
-                                            <p className="font-medium">Q{index + 1}:</p>
-                                            <p>{question}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </AuthProtection>

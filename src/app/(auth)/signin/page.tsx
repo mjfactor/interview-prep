@@ -20,7 +20,7 @@ export default function LoginPage() {
       if (user) {
         // User is signed in, redirect to interview page
         // The component will likely unmount or redirect, so no need to set isCheckingAuth
-        router.push("/interview-page")
+        router.push("/generate-question-page")
       } else {
         // No user is signed in, finished checking
         setIsCheckingAuth(false);

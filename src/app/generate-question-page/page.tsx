@@ -1,6 +1,6 @@
 "use client"
 
-import InterviewPage from '@/components/generate-question-page'
+import GenerateQuestion from '@/components/generate-question-page'
 
 const experienceLevels = [
     { value: "Entry-level", label: "Entry-level" },
@@ -31,7 +31,7 @@ const techStackSuggestions = [
 
 export default function Page() {
     return (
-        <InterviewPage
+        <GenerateQuestion
             experienceLevels={experienceLevels}
             categories={categories}
             techStackSuggestions={techStackSuggestions}

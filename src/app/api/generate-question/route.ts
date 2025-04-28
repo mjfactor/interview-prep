@@ -1,7 +1,7 @@
 import { google } from '@ai-sdk/google';
 import { generateObject } from 'ai'; // Changed back to generateObject
 import { z } from 'zod';
-import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
+
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -35,25 +35,6 @@ export async function POST(req: Request) {
             }),
             prompt,
         });
-
-        // Store the generated questions and parameters in Firestore
-        try {
-            const questionData = {
-                jobRole: jobRole,
-                experience: experience,
-                category: category,
-                count: count,
-                techStack: techStack,
-                questions: object.questions,
-                createdAt: serverTimestamp(),
-                uid: userId
-            };
-
-            // Add to the interviewQuestions collection
-            await addDoc(collection(db, "interviewQuestions"), questionData);
-        } catch (dbError) {
-            console.error('Error storing questions in database:', dbError);
-        }
         return Response.json(object)
     } catch (error) {
         console.error('Error generating interview questions:', error);
