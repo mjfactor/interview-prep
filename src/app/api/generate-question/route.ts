@@ -19,7 +19,7 @@ type RequestBody = {
 export async function POST(req: Request) {
     try {
         // Parse request body 
-        const { jobRole, count, category, experience, techStack, userId }: RequestBody = await req.json();
+        const { jobRole, count, category, experience, techStack }: RequestBody = await req.json();
 
 
         const prompt = `Generate ${count || 3} realistic interview ${category || 'technical'} questions based on the tech stack: ${techStack?.join(', ')} for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 

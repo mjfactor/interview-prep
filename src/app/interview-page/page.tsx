@@ -10,8 +10,5 @@ export default function Page() {
     useEffect(() => {
         router.push("/generate-question-page")
     }, [router]) // Add router to dependency array
-
-  
     return null 
 }
-

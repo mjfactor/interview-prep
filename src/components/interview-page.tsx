@@ -1,7 +1,6 @@
 import React from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Image from 'next/image'; // Assuming you might use Next.js Image component
 
 export default function InterviewPage() {
     return (
