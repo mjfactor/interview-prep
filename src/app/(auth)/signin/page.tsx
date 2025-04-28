@@ -51,13 +51,13 @@ export default function LoginPage() {
           description: `Welcome, ${user.displayName || "user"}!`,
         })
 
-        router.push("/interview-page")
+        router.push("/generate-question-page")
       } catch (firestoreError) {
         console.error("Firestore error:", firestoreError)
         toast.warning("Signed in but profile storage failed", {
           description: "You're signed in, but we couldn't update your profile data.",
         })
-        router.push("/interview-page")
+        router.push("/generate-question-page")
       }
     } catch (error) {
       console.error("Google sign-in error:", error)
