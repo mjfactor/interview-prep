@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, PhoneOff } from 'lucide-react'; // Import Mic and PhoneOff icons
 import { vapi } from '@/lib/aivapi.sdk';
-import { db, doc, getDoc } from '@/lib/firebase'; // Import necessary firebase functions
+import { db, doc, getDoc, Timestamp } from '@/lib/firebase'; // Import necessary firebase functions
+
 
 // Define an interface for the interview data structure
 interface InterviewData {
@@ -14,7 +15,7 @@ interface InterviewData {
     category: string;
     techStack: string[];
     questions: string[];
-    createdAt: any; // Adjust type as needed, e.g., Timestamp
+    createdAt: Timestamp; 
     uid: string;
 }
 
@@ -69,7 +70,7 @@ export default function InterviewPage({ id }: { id: string }) {
             console.log("Call has ended.");
         };
 
-        const handleError = (e: any) => {
+        const handleError = (e: unknown) => {
             setIsCalling(false);
             setStatusMessage("An error occurred. Please try again.");
             console.error("Vapi error:", e);

@@ -8,8 +8,8 @@ import {
     addDoc,
     getFirestore,
     serverTimestamp,
-    getDoc
-
+    getDoc,
+    Timestamp
 } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -50,4 +50,7 @@ export {
 
 };
 
-export type { User };
+export type {
+    User,
+    Timestamp
+};
