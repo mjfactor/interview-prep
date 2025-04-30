@@ -26,9 +26,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuth();
   const data = {
     user: {
-      name: user?.displayName!,
-      email: user?.email!,
-      avatar: user?.photoURL!,
+      name: user?.displayName ?? 'User',
+      email: user?.email ?? 'user@gmail.com',
+      avatar: user?.photoURL ?? '',
     },
     navMain: [
       {
