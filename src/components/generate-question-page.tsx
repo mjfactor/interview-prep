@@ -9,9 +9,8 @@ import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { z } from 'zod'
 import { X, LogOut } from 'lucide-react'
 import AuthProtection from '@/lib/auth/AuthProtection'
-import { getAuth, signOut, onAuthStateChanged, User } from '@/lib/firebase'
 import { useRouter } from 'next/navigation'
-import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
+import { db, collection, addDoc, serverTimestamp, getAuth, signOut, onAuthStateChanged, User } from '@/lib/firebase';
 // Define the props interface
 type GenerateQuestionProps = {
     experienceLevels: Array<{ value: string, label: string }>;
@@ -105,6 +104,7 @@ export default function GenerateQuestion({
             }
             try {
                 const questionData = {
+                    name: user!.displayName,
                     jobRole: jobRole,
                     experience: experience,
                     category: category,
