@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 
 export default function LandingPage() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 px-4 py-12 text-center">
+        <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12 text-center"> {/* Removed background classes */}
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-6xl mb-4">
                 Prepare for Your Next Interview
             </h1>

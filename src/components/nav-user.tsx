@@ -14,6 +14,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
 
+  DropdownMenuGroup,
+
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -76,6 +78,8 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+           
+            <DropdownMenuGroup/>
             <DropdownMenuItem onSelect={signOut} >
               <LogOut />
               Log out

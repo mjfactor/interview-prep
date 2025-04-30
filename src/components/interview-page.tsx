@@ -140,7 +140,7 @@ export default function InterviewPage({ id }: { id: string }) {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-slate-800">
+        <div className="flex flex-col items-center justify-center pt-40"> {/* Removed background classes */}
             <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
                 <CardHeader>
                     <CardTitle className="text-center text-2xl font-bold text-gray-800 dark:text-white">AI Interview Practice</CardTitle>
