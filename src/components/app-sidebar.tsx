@@ -21,75 +21,76 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Pages",
-      url: "#",
-      icon: Navigation,
-      items: [
-        {
-          title: "Generate Interivew",
-          url: "/dashboard/generate-question-page",
-        },
-        {
-          title: "Interview Generated",
-          url: "/dashboard/generate-question-page",
-        },
-
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    }
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
-  ],
-  GeneratedQuestion: [
-    {
-      name: "Travel",
-      url: "#",
-    },
-  ],
-}
-
+import { useAuth } from "@/hooks/firebase-hooks"
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const user = useAuth();
+  const data = {
+    user: {
+      name: user?.displayName!,
+      email: user?.email!,
+      avatar: user?.photoURL!,
+    },
+    navMain: [
+      {
+        title: "Pages",
+        url: "#",
+        icon: Navigation,
+        items: [
+          {
+            title: "Generate Interivew",
+            url: "/dashboard/generate-question-page",
+          },
+          {
+            title: "Interview Generated",
+            url: "/dashboard/generate-question-page",
+          },
+
+        ],
+      },
+      {
+        title: "Settings",
+        url: "#",
+        icon: Settings2,
+        items: [
+          {
+            title: "General",
+            url: "#",
+          },
+          {
+            title: "Team",
+            url: "#",
+          },
+          {
+            title: "Billing",
+            url: "#",
+          },
+          {
+            title: "Limits",
+            url: "#",
+          },
+        ],
+      }
+    ],
+    navSecondary: [
+      {
+        title: "Support",
+        url: "#",
+        icon: LifeBuoy,
+      },
+      {
+        title: "Feedback",
+        url: "#",
+        icon: Send,
+      },
+    ],
+    GeneratedQuestion: [
+      {
+        name: "Travel",
+        url: "#",
+      },
+    ],
+  }
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
