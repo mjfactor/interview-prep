@@ -80,7 +80,7 @@ export default function LoginPage() {
 
   // Render the login page only if not checking auth and user is not logged in
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-2">
           {/* Optional: Add an icon/logo here */}
