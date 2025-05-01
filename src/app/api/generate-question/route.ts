@@ -8,6 +8,7 @@ export const maxDuration = 30;
 
 // Define the types for request body
 type RequestBody = {
+    name?: string;
     jobRole?: string;
     experience?: string;
     category?: string;

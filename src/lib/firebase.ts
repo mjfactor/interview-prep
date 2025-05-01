@@ -44,7 +44,6 @@ export {
     signInWithPopup,
     serverTimestamp,
     signOut,
-    getAuth,
     onAuthStateChanged,
     getDoc
 

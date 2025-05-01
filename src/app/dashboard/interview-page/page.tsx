@@ -8,7 +8,7 @@ export default function Page() {
 
     // Use useEffect to perform the redirect after the component mounts
     useEffect(() => {
-        router.push("/generate-question-page")
+        router.push("/dashboard/generate-question-page")
     }, [router]) // Add router to dependency array
     return null
 }

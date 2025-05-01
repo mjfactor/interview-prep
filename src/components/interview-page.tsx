@@ -10,12 +10,13 @@ import { db, doc, getDoc, Timestamp } from '@/lib/firebase'; // Import necessary
 
 // Define an interface for the interview data structure
 interface InterviewData {
+    name: string;
     jobRole: string;
     experience: string;
     category: string;
     techStack: string[];
     questions: string[];
-    createdAt: Timestamp; 
+    createdAt: Timestamp;
     uid: string;
 }
 
@@ -93,9 +94,9 @@ export default function InterviewPage({ id }: { id: string }) {
         setStatusMessage("Starting call...");
         try {
             // Construct the system prompt using fetched data
-            const systemPrompt = `You are an AI interviewer named Lily conducting a practice interview for a ${interviewData.experience} ${interviewData.jobRole} position.
+            const systemPrompt = `You are a interviewer named Eubert from a certain company conducting a practice for a ${interviewData.experience} ${interviewData.jobRole} position.
             The interview focuses on ${interviewData.category} topics, specifically related to the following technologies: ${interviewData.techStack.join(', ')}.
-            Start by introducing yourself briefly.
+            Start by introducing yourself briefly. Then, layout the users inputted information and explain the interview process.
             Then, ask the candidate the following questions one by one, waiting for their response before moving to the next:
             ${interviewData.questions.map((q, index) => `${index + 1}. ${q}`).join('\n')}
             Keep the conversation natural and provide brief feedback or follow-up questions if appropriate, but primarily focus on asking the prepared questions.
@@ -103,7 +104,7 @@ export default function InterviewPage({ id }: { id: string }) {
 
             await vapi.start({
                 name: "Lily",
-                firstMessage: "Hello! I'm Lily, your AI interviewer. Ready to begin?", // Adjusted first message
+                firstMessage: `Hello ${interviewData.name}! I'm Lily, your interviewer for Today. Ready to begin?`, // Adjusted first message
                 transcriber: {
                     provider: "deepgram",
                     model: "nova-3",
@@ -114,12 +115,12 @@ export default function InterviewPage({ id }: { id: string }) {
                     voiceId: "Lily",
                 },
                 model: {
-                    provider: "google", // Changed provider back if needed, or keep openai
-                    model: "gemini-1.5-flash", // Or your preferred model like gpt-4o-mini
+                    provider: "openai",
+                    model: "gpt-4.1-mini",
                     messages: [
                         {
                             role: "system",
-                            content: systemPrompt, // Use the dynamically generated prompt
+                            content: systemPrompt,
                         },
                     ],
                 },
@@ -139,7 +140,7 @@ export default function InterviewPage({ id }: { id: string }) {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-slate-800">
+        <div className="flex flex-col items-center justify-center pt-40"> {/* Removed background classes */}
             <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
                 <CardHeader>
                     <CardTitle className="text-center text-2xl font-bold text-gray-800 dark:text-white">AI Interview Practice</CardTitle>

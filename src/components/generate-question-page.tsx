@@ -1,17 +1,17 @@
 "use client"
 
-import React, { useState, KeyboardEvent, useEffect } from 'react'
+import React, { useState, KeyboardEvent} from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 
 import { z } from 'zod'
-import { X, LogOut } from 'lucide-react'
+import { X, } from 'lucide-react'
 import AuthProtection from '@/lib/auth/AuthProtection'
-import { getAuth, signOut, onAuthStateChanged, User } from '@/lib/firebase'
 import { useRouter } from 'next/navigation'
 import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
+import { useAuth } from '@/hooks/firebase-hooks';
 // Define the props interface
 type GenerateQuestionProps = {
     experienceLevels: Array<{ value: string, label: string }>;
@@ -25,30 +25,7 @@ export default function GenerateQuestion({
     techStackSuggestions
 }: GenerateQuestionProps) {
     const router = useRouter()
-    const auth = getAuth();
-    // Use state to store the user, updated by the observer
-    const [user, setUser] = useState<User | null>(null);
-
-    // Set up the auth state observer
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
-    }, [auth]);
-
-    // Handle sign out
-    const handleSignOut = async () => {
-        try {
-            await signOut(auth);
-            // The AuthProtection component will automatically redirect to signin page
-        } catch (error) {
-            console.error("Error signing out:", error);
-        }
-    };
-
+    const user = useAuth();
     // Form state
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
@@ -105,6 +82,7 @@ export default function GenerateQuestion({
             }
             try {
                 const questionData = {
+                    name: user!.displayName,
                     jobRole: jobRole,
                     experience: experience,
                     category: category,
@@ -114,13 +92,11 @@ export default function GenerateQuestion({
                     createdAt: serverTimestamp(),
                     uid: user!.uid
                 };
-
                 // Add to the interviewQuestions collection (await works here now)
                 const docRef = await addDoc(collection(db, "interviewQuestions"), questionData);
-                router.push(`/interview-page/${docRef.id}`);
+                router.push(`/dashboard/interview-page/${docRef.id}`);
             } catch (dbError) {
                 console.error('Error storing questions in database:', dbError);
-                // Optionally, show an error message to the user
             }
         },
         onError(error) {
@@ -142,30 +118,12 @@ export default function GenerateQuestion({
             userId: user!.uid, // Use the user state
         };
 
-        // Use the submit function from useObject hook to send the request to the API
         submit(requestBody);
     }
 
     return (
         <AuthProtection>
             <div className="container mx-auto px-4 py-8">
-                <header className="mb-8 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold">Interview Question Generator</h1>
-                        <p className="text-muted-foreground mt-2">
-                            Generate tailored interview questions for your next job interview
-                        </p>
-                    </div>
-                    <Button
-                        variant="outline"
-                        onClick={handleSignOut}
-                        className="flex items-center gap-2"
-                    >
-                        <LogOut size={16} />
-                        Sign Out
-                    </Button>
-                </header>
-
                 <div className="max-w-md mx-auto">
                     {/* Form Section */}
                     <div className="space-y-6">

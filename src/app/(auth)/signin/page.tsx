@@ -20,7 +20,7 @@ export default function LoginPage() {
       if (user) {
         // User is signed in, redirect to interview page
         // The component will likely unmount or redirect, so no need to set isCheckingAuth
-        router.push("/generate-question-page")
+        router.push("/dashboard/generate-question-page")
       } else {
         // No user is signed in, finished checking
         setIsCheckingAuth(false);
@@ -51,13 +51,13 @@ export default function LoginPage() {
           description: `Welcome, ${user.displayName || "user"}!`,
         })
 
-        router.push("/generate-question-page")
+        router.push("/dashboard/generate-question-page")
       } catch (firestoreError) {
         console.error("Firestore error:", firestoreError)
         toast.warning("Signed in but profile storage failed", {
           description: "You're signed in, but we couldn't update your profile data.",
         })
-        router.push("/generate-question-page")
+        router.push("/dashboard/generate-question-page")
       }
     } catch (error) {
       console.error("Google sign-in error:", error)
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
   // Render the login page only if not checking auth and user is not logged in
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-2">
           {/* Optional: Add an icon/logo here */}
