@@ -1,0 +1,11 @@
+# Allow all user agents
+User-agent: *
+Allow: /
+
+# Allow access to the OG image generation endpoint
+Allow: /api/og
+
+# Disallow specific paths if needed, e.g.:
+# Disallow: /private/
+
+Sitemap: [TODO: Add absolute URL to sitemap.xml if you have one]
