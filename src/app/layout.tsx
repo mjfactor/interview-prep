@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css";
-
+import { Analytics } from '@vercel/analytics/next';
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,8 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// TODO: Replace with the actual production URL
-const productionUrl = `https://prep-interview-vapi.vercel.app`; 
+const productionUrl = `https://prep-interview-vapi.vercel.app`;
 
 const ogImageUrl = `${productionUrl}/api/og`;
 
@@ -62,6 +61,7 @@ export default function RootLayout({
           <Toaster />
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
