@@ -24,7 +24,7 @@ import {
 import { useUser } from "@/hooks/firebase-hooks"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = useUser();
+  const {user} = useUser();
   const data = {
     user: {
       name: user?.displayName ?? 'User',

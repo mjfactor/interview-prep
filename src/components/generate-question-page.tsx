@@ -24,7 +24,7 @@ export default function GenerateQuestion({
     techStackSuggestions
 }: GenerateQuestionProps) {
     const router = useRouter()
-    const user = useUser();
+    const {user} = useUser();
     // Form state
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')

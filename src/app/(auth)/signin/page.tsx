@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false) // Renamed for clarity
 
   const router = useRouter()
-  const logged = useUser()
+  const { user: logged } = useUser()
 
   const handleGoogleSignIn = async () => {
     try {
