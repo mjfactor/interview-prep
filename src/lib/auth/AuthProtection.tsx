@@ -17,7 +17,6 @@ export default function AuthProtection({ children }: AuthProtectionProps) {
             if (user) {
                 setIsAuthenticated(true)
             } else {
-                // User is not signed in, redirect to sign-in page
                 router.push("/signin")
             }
             setIsLoading(false)

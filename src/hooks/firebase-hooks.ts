@@ -1,11 +1,9 @@
-"use client"
-
-import { useState, useEffect } from 'react';
+import * as React from "react"
 import { auth, onAuthStateChanged, User } from '@/lib/firebase'; // Adjust path if needed
 import { useRouter } from 'next/navigation'; // Adjust path if needed
 function useAuth() {
-    const [user, setUser] = useState<User | null>(null);
-    useEffect(() => {
+    const [user, setUser] = React.useState<User | null>(null);
+    React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
         });

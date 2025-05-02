@@ -13,7 +13,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
-import AuthProtection from "@/lib/auth/AuthProtection"; // Import AuthProtection
+import AuthProtection from "@/lib/auth/AuthProtection";
 
 export default function DashboardLayout({
     children,
@@ -21,7 +21,6 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     return (
-        // Wrap the content with AuthProtection
         <AuthProtection>
             <SidebarProvider>
                 <AppSidebar />

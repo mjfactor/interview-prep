@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { auth, googleProvider, signInWithPopup, db, doc, setDoc } from "@/lib/firebase"
-import { useAuth } from "@/hooks/firebase-hooks" // Adjust the import path as necessary
+import { useAuth } from "@/hooks/firebase-hooks"
 export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false) // Renamed for clarity
 
