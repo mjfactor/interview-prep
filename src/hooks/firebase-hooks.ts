@@ -1,7 +1,7 @@
 import * as React from "react"
 import { auth, onAuthStateChanged, User } from '@/lib/firebase'; // Adjust path if needed
 import { useRouter } from 'next/navigation'; // Adjust path if needed
-function useAuth() {
+function useUser() {
     const [user, setUser] = React.useState<User | null>(null);
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -26,4 +26,4 @@ function useSignOut() {
     return signOut;
 }
 
-export { useAuth, useSignOut };
+export { useUser, useSignOut };

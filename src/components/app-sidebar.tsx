@@ -21,10 +21,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { useAuth } from "@/hooks/firebase-hooks"
+import { useUser } from "@/hooks/firebase-hooks"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = useAuth();
+  const user = useUser();
   const data = {
     user: {
       name: user?.displayName ?? 'User',

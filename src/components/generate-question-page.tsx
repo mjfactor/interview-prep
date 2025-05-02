@@ -10,7 +10,7 @@ import { z } from 'zod'
 import { X, } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
-import { useAuth } from '@/hooks/firebase-hooks';
+import { useUser } from '@/hooks/firebase-hooks';
 // Define the props interface
 type GenerateQuestionProps = {
     experienceLevels: Array<{ value: string, label: string }>;
@@ -24,7 +24,7 @@ export default function GenerateQuestion({
     techStackSuggestions
 }: GenerateQuestionProps) {
     const router = useRouter()
-    const user = useAuth();
+    const user = useUser();
     // Form state
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
