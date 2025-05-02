@@ -9,14 +9,11 @@ function useAuth() {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
         });
-
-        // Cleanup subscription on unmount
         return () => unsubscribe();
-    }, []); // Empty dependency array ensures this runs only once
+    }, []);
 
     return user;
 }
-
 
 function useSignOut() {
     const router = useRouter();

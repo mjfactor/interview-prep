@@ -2,38 +2,26 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { auth, googleProvider, signInWithPopup, db, doc, setDoc, onAuthStateChanged } from "@/lib/firebase"
-
+import { auth, googleProvider, signInWithPopup, db, doc, setDoc } from "@/lib/firebase"
+import { useAuth } from "@/hooks/firebase-hooks" // Adjust the import path as necessary
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add state to track auth check
+  const [isSigningIn, setIsSigningIn] = useState(false) // Renamed for clarity
+
   const router = useRouter()
-
-  // Check if user is already logged in when component mounts
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in, redirect to interview page
-        // The component will likely unmount or redirect, so no need to set isCheckingAuth
-        router.push("/dashboard/generate-question-page")
-      } else {
-        // No user is signed in, finished checking
-        setIsCheckingAuth(false);
-      }
-    })
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe()
-  }, [router])
+  const logged = useAuth()
 
   const handleGoogleSignIn = async () => {
     try {
-      setIsLoading(true)
+      if (logged) {
+        router.push("/dashboard/generate-question-page")
+        return
+      }
+      setIsSigningIn(true)
       const result = await signInWithPopup(auth, googleProvider)
       const user = result.user
 
@@ -51,14 +39,13 @@ export default function LoginPage() {
           description: `Welcome, ${user.displayName || "user"}!`,
         })
 
-        router.push("/dashboard/generate-question-page")
       } catch (firestoreError) {
         console.error("Firestore error:", firestoreError)
         toast.warning("Signed in but profile storage failed", {
           description: "You're signed in, but we couldn't update your profile data.",
         })
-        router.push("/dashboard/generate-question-page")
       }
+      router.push("/dashboard/generate-question-page")
     } catch (error) {
       console.error("Google sign-in error:", error)
       let errorMessage = "Failed to sign in with Google"
@@ -69,16 +56,10 @@ export default function LoginPage() {
         description: errorMessage,
       })
     } finally {
-      setIsLoading(false)
+      setIsSigningIn(false) // Use the renamed state setter
     }
   }
 
-  // Don't render anything until the auth check is complete
-  if (isCheckingAuth) {
-    return null; // Or a loading spinner component
-  }
-
-  // Render the login page only if not checking auth and user is not logged in
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md shadow-lg">
@@ -101,10 +82,10 @@ export default function LoginPage() {
             type="button"
             variant="outline"
             onClick={handleGoogleSignIn}
-            disabled={isLoading}
+            disabled={isSigningIn} // Use the combined loading state
             className="w-full flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {isSigningIn ? (
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -129,7 +110,7 @@ export default function LoginPage() {
                 />
               </svg>
             )}
-            {isLoading ? "Signing in..." : "Sign in with Google"}
+            {isSigningIn ? "Loading..." : "Sign in with Google"} {/* Updated loading text */}
           </Button>
         </CardContent>
         {/* Optional: Add CardFooter if needed */}

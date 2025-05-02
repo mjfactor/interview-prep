@@ -13,7 +13,7 @@ export default function LandingPage() {
             <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-300 max-w-2xl mb-8">
                 Sharpen your skills and ace your technical interviews with our AI-powered preparation platform.
             </p>
-            <Link href="/signin" passHref>
+            <Link href="/dashboard/generate-question-page" passHref>
                 <Button size="lg">Sign In to Get Started</Button>
             </Link>
         </div>
