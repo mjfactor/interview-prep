@@ -29,7 +29,7 @@ export default function InterviewPage({ id }: { id: string }) {
     const [statusMessage, setStatusMessage] = useState("Loading interview details...");
     const [interviewData, setInterviewData] = useState<InterviewData | null>(null);
     const [isLoading, setIsLoading] = useState(true); // Add loading state
-    const [vapi, setVapi] = useState<any>(null);
+    const [vapi, setVapi] = useState<unknown>(null);
     const [vapiLoading, setVapiLoading] = useState(true);
 
     // Initialize Vapi with user ID when available
