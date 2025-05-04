@@ -6,7 +6,8 @@ import {
   LifeBuoy,
   Send,
   Settings2,
-  Navigation
+  Navigation,
+  Key
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -24,7 +25,7 @@ import {
 import { useUser } from "@/hooks/firebase-hooks"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {user} = useUser();
+  const { user } = useUser();
   const data = {
     user: {
       name: user?.displayName ?? 'User',
@@ -53,6 +54,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "#",
         icon: Settings2,
         items: [
+          {
+            title: "API Keys",
+            url: "/dashboard/api-keys",
+            icon: Key,
+          },
           {
             title: "General",
             url: "#",

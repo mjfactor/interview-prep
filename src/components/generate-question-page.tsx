@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { experimental_useObject as useObject } from '@ai-sdk/react';
+import { toast } from 'sonner';
 
 import { z } from 'zod'
 import { X, } from 'lucide-react'
@@ -24,7 +25,7 @@ export default function GenerateQuestion({
     techStackSuggestions
 }: GenerateQuestionProps) {
     const router = useRouter()
-    const {user} = useUser();
+    const { user } = useUser();
     // Form state
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
@@ -99,7 +100,29 @@ export default function GenerateQuestion({
             }
         },
         onError(error) {
-            console.error("Error generating questions:", error)
+            console.error("Error generating questions:", error);
+            
+            // Check if the error is about missing API key
+            if (error instanceof Error) {
+                const errorMessage = error.message;
+                if (errorMessage.includes('Google API key not found')) {
+                    toast.error('Google API key not found. Please add it in your settings.', {
+                        description: 'Go to Settings > API Keys to add your Google API key.',
+                        action: {
+                            label: 'Settings',
+                            onClick: () => router.push('/dashboard/api-keys')
+                        }
+                    });
+                } else {
+                    toast.error('Failed to generate interview questions', {
+                        description: 'An error occurred while generating questions. Please try again.'
+                    });
+                }
+            } else {
+                toast.error('Failed to generate interview questions', {
+                    description: 'An error occurred while generating questions. Please try again.'
+                });
+            }
         },
     });
 

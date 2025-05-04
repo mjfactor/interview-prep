@@ -1,7 +1,7 @@
-import { google } from '@ai-sdk/google';
-import { generateObject } from 'ai'; // Changed back to generateObject
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { generateObject } from 'ai';
 import { z } from 'zod';
-
+import { db, doc, getDoc } from '@/lib/firebase';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -20,8 +20,30 @@ type RequestBody = {
 export async function POST(req: Request) {
     try {
         // Parse request body 
-        const { jobRole, count, category, experience, techStack }: RequestBody = await req.json();
+        const { jobRole, count, category, experience, techStack, userId }: RequestBody = await req.json();
 
+        // Get the user's Google API key from Firebase if userId is provided
+        let apiKey = '';
+        if (userId) {
+            const apiKeysDoc = await getDoc(doc(db, "users", userId, "settings", "apiKeys"));
+
+            if (apiKeysDoc.exists()) {
+                const data = apiKeysDoc.data();
+                apiKey = data.googleApiKey || '';
+            }
+        }
+
+        if (!apiKey) {
+            return Response.json(
+                { error: 'Google API key not found. Please add it in your settings.' },
+                { status: 400 }
+            );
+        }
+
+        // Create custom Google provider with user's API key
+        const google = createGoogleGenerativeAI({
+            apiKey
+        });
 
         const prompt = `Generate ${count || 3} realistic interview ${category || 'technical'} questions based on the tech stack: ${techStack?.join(', ')} for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 
                         Make sure the questions are challenging but appropriate for the experience level.`;
@@ -36,7 +58,8 @@ export async function POST(req: Request) {
             }),
             prompt,
         });
-        return Response.json(object)
+
+        return Response.json(object);
     } catch (error) {
         console.error('Error generating interview questions:', error);
         return Response.json(

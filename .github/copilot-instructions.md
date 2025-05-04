@@ -1,1 +1,0 @@
-# Use PNPM if you were to install some apps
