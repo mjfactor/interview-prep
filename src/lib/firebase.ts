@@ -9,7 +9,12 @@ import {
     getFirestore,
     serverTimestamp,
     getDoc,
-    Timestamp
+    Timestamp,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    deleteDoc
 } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -45,8 +50,12 @@ export {
     serverTimestamp,
     signOut,
     onAuthStateChanged,
-    getDoc
-
+    getDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    deleteDoc
 };
 
 export type {

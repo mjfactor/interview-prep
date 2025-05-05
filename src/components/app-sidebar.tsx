@@ -44,7 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Interview Generated",
-            url: "/dashboard/generate-question-page",
+            url: "/dashboard/interview-generated",
           },
 
         ],

@@ -82,7 +82,7 @@ export default function InterviewPage({ id }: { id: string }) {
                 return;
             }
             try {
-                const docRef = doc(db, "interviewQuestions", id);
+                const docRef = doc(db, "interviewData", id);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {

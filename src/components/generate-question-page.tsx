@@ -81,7 +81,7 @@ export default function GenerateQuestion({
                 return;
             }
             try {
-                const questionData = {
+                const interviewData = {
                     name: user!.displayName,
                     jobRole: jobRole,
                     experience: experience,
@@ -93,7 +93,7 @@ export default function GenerateQuestion({
                     uid: user!.uid
                 };
 
-                const docRef = await addDoc(collection(db, "interviewQuestions"), questionData);
+                const docRef = await addDoc(collection(db, "interviewData"), interviewData);
                 router.push(`/dashboard/interview-page/${docRef.id}`);
             } catch (dbError) {
                 console.error('Error storing questions in database:', dbError);
