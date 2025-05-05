@@ -37,8 +37,15 @@ export default function InterviewPage({ id }: { id: string }) {
         const initializeVapi = async () => {
             try {
                 setVapiLoading(true);
-                const instance = await getVapiInstance(user?.uid);
-                setVapi(instance);
+
+                // Only attempt to initialize Vapi if the user exists and has a uid
+                if (user && user.uid) {
+                    const instance = await getVapiInstance(user.uid);
+                    setVapi(instance);
+                } else {
+                    // We're still waiting for auth state or user isn't logged in
+                    console.log("Waiting for user authentication state...");
+                }
             } catch (error) {
                 console.error("Error initializing Vapi:", error);
 
@@ -52,13 +59,9 @@ export default function InterviewPage({ id }: { id: string }) {
                                 onClick: () => router.push('/dashboard/api-keys')
                             }
                         });
-                    } else if (error.message.includes('User ID is required')) {
-                        toast.error('Authentication required', {
-                            description: 'Please sign in to use the interview feature.'
-                        });
                     } else {
                         toast.error('Failed to initialize Vapi', {
-                            description: 'An error occurred while setting up the interview system.'
+                            description: 'An error occurred while setting up the interview system. Check your API key and try again.',
                         });
                     }
                 }
@@ -68,7 +71,7 @@ export default function InterviewPage({ id }: { id: string }) {
         };
 
         initializeVapi();
-    }, [user?.uid, router]); // Re-initialize if user changes
+    }, [user, router]); // Listen to user object changes, not just user?.uid
 
     // Fetch interview data from Firestore
     useEffect(() => {

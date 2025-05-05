@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useUser } from "@/hooks/firebase-hooks"
 import { doc, getDoc, setDoc, db } from "@/lib/firebase"
+import { validateVapiKey } from "@/lib/aivapi.sdk"
 
 export default function ApiKeysPage() {
   const [googleApiKey, setGoogleApiKey] = useState("")
@@ -17,6 +18,8 @@ export default function ApiKeysPage() {
   const [showGoogleKey, setShowGoogleKey] = useState(false)
   const [showVapiKey, setShowVapiKey] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [validatingGoogle, setValidatingGoogle] = useState(false)
+  const [validatingVapi, setValidatingVapi] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const { user } = useUser()
   const router = useRouter()
@@ -48,6 +51,35 @@ export default function ApiKeysPage() {
     fetchApiKeys()
   }, [user])
 
+  // Validate Gemini API key using the API endpoint
+  const validateGeminiKey = async (apiKey: string): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/validate-keys/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ apiKey }),
+      });
+
+      const data = await response.json();
+      return data.valid;
+    } catch (error) {
+      console.error("Error validating Gemini key:", error);
+      return false;
+    }
+  };
+
+  // Validate Vapi API key using the function from aivapi.sdk.ts
+  const validateVapiKeyLocal = async (apiKey: string): Promise<boolean> => {
+    try {
+      return await validateVapiKey(apiKey);
+    } catch (error) {
+      console.error("Error validating Vapi key:", error);
+      return false;
+    }
+  };
+
   const handleSaveApiKeys = async () => {
     if (!user) {
       toast.error("You must be logged in to save API keys")
@@ -55,25 +87,78 @@ export default function ApiKeysPage() {
     }
 
     setLoading(true)
-    try {
-      // Save API keys to Firestore
-      await setDoc(
-        doc(db, "users", user.uid, "settings", "apiKeys"),
-        {
-          googleApiKey,
-          vapiApiKey,
-          updatedAt: new Date()
-        },
-        { merge: true }
-      )
-
-      toast.success("API keys saved successfully")
-    } catch (error) {
-      console.error("Error saving API keys:", error)
-      toast.error("Failed to save API keys")
-    } finally {
-      setLoading(false)
+    let googleKeyValid = true
+    let vapiKeyValid = true
+    const keysToSave: { googleApiKey?: string; vapiApiKey?: string; updatedAt: Date } = {
+      updatedAt: new Date()
     }
+
+    // Validate Google API key (if provided)
+    if (googleApiKey.trim()) {
+      setValidatingGoogle(true)
+      try {
+        googleKeyValid = await validateGeminiKey(googleApiKey)
+        if (!googleKeyValid) {
+          toast.error("Invalid Google API key", {
+            description: "The provided Google API key could not be validated."
+          })
+        } else {
+          keysToSave.googleApiKey = googleApiKey
+        }
+      } catch (error) {
+        console.error("Error validating Google API key:", error)
+        toast.error("Failed to validate Google API key")
+        googleKeyValid = false
+      } finally {
+        setValidatingGoogle(false)
+      }
+    } else if (googleApiKey === "") {
+      // If field is empty, it means the user wants to clear the key
+      keysToSave.googleApiKey = ""
+    }
+
+    // Validate Vapi API key (if provided)
+    if (vapiApiKey.trim()) {
+      setValidatingVapi(true)
+      try {
+        vapiKeyValid = await validateVapiKeyLocal(vapiApiKey)
+        if (!vapiKeyValid) {
+          toast.error("Invalid Vapi API key", {
+            description: "The provided Vapi API key could not be validated."
+          })
+        } else {
+          keysToSave.vapiApiKey = vapiApiKey
+        }
+      } catch (error) {
+        console.error("Error validating Vapi API key:", error)
+        toast.error("Failed to validate Vapi API key")
+        vapiKeyValid = false
+      } finally {
+        setValidatingVapi(false)
+      }
+    } else if (vapiApiKey === "") {
+      // If field is empty, it means the user wants to clear the key
+      keysToSave.vapiApiKey = ""
+    }
+
+    // Save valid keys to database
+    if (googleKeyValid && vapiKeyValid && (keysToSave.googleApiKey !== undefined || keysToSave.vapiApiKey !== undefined)) {
+      try {
+        await setDoc(
+          doc(db, "users", user.uid, "settings", "apiKeys"),
+          keysToSave,
+          { merge: true }
+        )
+        toast.success("API keys saved successfully", {
+          description: "Only valid keys were saved to your account."
+        })
+      } catch (error) {
+        console.error("Error saving API keys:", error)
+        toast.error("Failed to save API keys")
+      }
+    }
+
+    setLoading(false)
   }
 
   if (!user) {
@@ -96,6 +181,13 @@ export default function ApiKeysPage() {
     )
   }
 
+  const isValidating = validatingGoogle || validatingVapi
+  const buttonText = isValidating
+    ? "Validating..."
+    : loading
+      ? "Saving..."
+      : "Save API Keys"
+
   return (
     <div className="container py-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">API Keys Settings</h1>
@@ -105,6 +197,7 @@ export default function ApiKeysPage() {
             <CardTitle>Google API Key</CardTitle>
             <CardDescription>
               Configure your Google API key for enhanced functionality.
+              {validatingGoogle && <span className="text-yellow-600 ml-2">Validating...</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,7 +211,7 @@ export default function ApiKeysPage() {
                     onChange={(e) => setGoogleApiKey(e.target.value)}
                     placeholder="Enter your Google API key"
                     type={showGoogleKey ? "text" : "password"}
-                    disabled={isFetching || loading}
+                    disabled={isFetching || loading || isValidating}
                     className="pr-10"
                   />
                   <button
@@ -144,6 +237,7 @@ export default function ApiKeysPage() {
             <CardTitle>Vapi API Key</CardTitle>
             <CardDescription>
               Configure your Vapi API key for voice AI integration.
+              {validatingVapi && <span className="text-yellow-600 ml-2">Validating...</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -157,7 +251,7 @@ export default function ApiKeysPage() {
                     onChange={(e) => setVapiApiKey(e.target.value)}
                     placeholder="Enter your Vapi API key"
                     type={showVapiKey ? "text" : "password"}
-                    disabled={isFetching || loading}
+                    disabled={isFetching || loading || isValidating}
                     className="pr-10"
                   />
                   <button
@@ -181,9 +275,9 @@ export default function ApiKeysPage() {
         <div className="flex justify-end">
           <Button
             onClick={handleSaveApiKeys}
-            disabled={isFetching || loading}
+            disabled={isFetching || loading || isValidating}
           >
-            {loading ? "Saving..." : "Save API Keys"}
+            {buttonText}
           </Button>
         </div>
       </div>

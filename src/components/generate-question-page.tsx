@@ -30,7 +30,7 @@ export default function GenerateQuestion({
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
     const [category, setCategory] = useState<string>('technical')
-    const [count, setCount] = useState<number>(10)
+    const [count, setCount] = useState<number>(5)
 
     // Tech stack state
     const [techStack, setTechStack] = useState<string[]>(['React', 'TypeScript'])
@@ -101,7 +101,7 @@ export default function GenerateQuestion({
         },
         onError(error) {
             console.error("Error generating questions:", error);
-            
+
             // Check if the error is about missing API key
             if (error instanceof Error) {
                 const errorMessage = error.message;

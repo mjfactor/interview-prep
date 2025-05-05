@@ -21,6 +21,7 @@
     "@radix-ui/react-slot": "^1.2.0",
     "@radix-ui/react-switch": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.2.4",
+    "@vapi-ai/server-sdk": "^0.6.4",
     "@vapi-ai/web": "^2.2.6",
     "@vercel/analytics": "^1.5.0",
     "ai": "^4.3.9",
