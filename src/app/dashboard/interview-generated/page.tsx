@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { Calendar, Clock, Code, MessageSquare, Search, Trash2 } from "lucide-react"
+import { Calendar, Clock, Code, Loader2, MessageSquare, RefreshCw, Search, Trash2 } from "lucide-react"
 
 import { db, collection, getDocs, query, where, orderBy, deleteDoc, doc } from "@/lib/firebase"
 import { useUser } from "@/hooks/firebase-hooks"
@@ -34,7 +34,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import {
     DropdownMenu,
@@ -68,42 +67,74 @@ export default function InterviewGeneratedPage() {
     const [filteredInterviews, setFilteredInterviews] = useState<InterviewData[]>([])
     const [deleteId, setDeleteId] = useState<string | null>(null)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [isRetrying, setIsRetrying] = useState(false)
+    const [showRetryButton, setShowRetryButton] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    // Fetch interviews from Firestore
-    useEffect(() => {
-        const fetchInterviews = async () => {
-            if (!user) {
-                setLoading(false)
-                return
-            }
-
-            try {
-                const interviewQuery = query(
-                    collection(db, "interviewData"),
-                    where("uid", "==", user.uid),
-                    orderBy("createdAt", "desc")
-                )
-                
-                const querySnapshot = await getDocs(interviewQuery)
-                const interviewList: InterviewData[] = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                } as InterviewData))
-
-                setInterviews(interviewList)
-                setFilteredInterviews(interviewList)
-            } catch (error) {
-                console.error("Error fetching interviews:", error)
-                toast.error("Failed to load interviews", {
-                    description: "There was a problem retrieving your interview data."
-                })
-            } finally {
-                setLoading(false)
-            }
+    // Extract fetch interviews logic into a separate function so it can be reused
+    const fetchInterviews = useCallback(async () => {
+        if (!user) {
+            setLoading(false)
+            return
         }
 
+        try {
+            setError(null)
+
+            const interviewQuery = query(
+                collection(db, "interviewData"),
+                where("uid", "==", user.uid),
+                orderBy("createdAt", "desc")
+            )
+
+            const querySnapshot = await getDocs(interviewQuery)
+            const interviewList: InterviewData[] = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            } as InterviewData))
+
+            setInterviews(interviewList)
+            setFilteredInterviews(interviewList)
+
+            // Show success message when retrying
+            if (isRetrying) {
+                toast.success("Interviews refreshed", {
+                    description: `Found ${interviewList.length} interview${interviewList.length !== 1 ? 's' : ''}`
+                })
+            }
+        } catch (error) {
+            console.error("Error fetching interviews:", error)
+            setError("Failed to load interviews. Please try again.")
+            toast.error("Failed to load interviews", {
+                description: "There was a problem retrieving your interview data."
+            })
+        } finally {
+            setLoading(false)
+            setIsRetrying(false)
+            setShowRetryButton(false)
+        }
+    }, [user, isRetrying])
+
+    // Handle retry button click
+    const handleRetry = () => {
+        setIsRetrying(true)
+        setLoading(true)
         fetchInterviews()
-    }, [user])
+    }
+
+    // Fetch interviews from Firestore on component mount
+    useEffect(() => {
+        fetchInterviews()
+
+        // Show retry button after 5 seconds if still loading
+        const timer = setTimeout(() => {
+            if (loading) {
+                setShowRetryButton(true)
+            }
+        }, 5000)
+
+        return () => clearTimeout(timer)
+    }, [user, fetchInterviews])
 
     // Filter interviews based on search term
     useEffect(() => {
@@ -161,6 +192,30 @@ export default function InterviewGeneratedPage() {
                     <div className="flex justify-between items-center">
                         <h1 className="text-3xl font-bold">Your Interviews</h1>
                     </div>
+
+                    {showRetryButton && (
+                        <div className="flex justify-center my-4">
+                            <Button
+                                onClick={handleRetry}
+                                disabled={isRetrying}
+                                variant="outline"
+                                className="mx-auto"
+                            >
+                                {isRetrying ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Retrying...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="mr-2 h-4 w-4" />
+                                        Retry loading
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                         {[...Array(6)].map((_, i) => (
                             <Card key={i} className="animate-pulse">
@@ -171,6 +226,52 @@ export default function InterviewGeneratedPage() {
                         ))}
                     </div>
                 </div>
+            </div>
+        )
+    }
+
+    // Display error state
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-12">
+                <Card className="border-dashed border-2">
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                        <div className="rounded-full bg-destructive/10 p-4 mb-4">
+                            <RefreshCw className="h-8 w-8 text-destructive" />
+                        </div>
+                        <h3 className="text-2xl font-medium mb-2">Error loading interviews</h3>
+                        <p className="text-muted-foreground text-center max-w-md mb-6">
+                            {error}
+                        </p>
+                        <div className="flex gap-4">
+                            <Button
+                                onClick={handleRetry}
+                                disabled={isRetrying}
+                                size="lg"
+                                variant="default"
+                            >
+                                {isRetrying ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Retrying...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="mr-2 h-4 w-4" />
+                                        Retry
+                                    </>
+                                )}
+                            </Button>
+                            <Button
+                                onClick={() => router.push('/dashboard/generate-question-page')}
+                                variant="outline"
+                                size="lg"
+                            >
+                                Generate New Interview
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         )
     }
@@ -188,12 +289,32 @@ export default function InterviewGeneratedPage() {
                         <p className="text-muted-foreground text-center max-w-md mb-6">
                             You haven't generated any interview questions yet. Generate your first interview to get started!
                         </p>
-                        <Button
-                            onClick={() => router.push('/dashboard/generate-question-page')}
-                            size="lg"
-                        >
-                            Generate Interview
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Button
+                                onClick={() => router.push('/dashboard/generate-question-page')}
+                                size="lg"
+                            >
+                                Generate Interview
+                            </Button>
+                            <Button
+                                onClick={handleRetry}
+                                disabled={isRetrying}
+                                variant="outline"
+                                size="lg"
+                            >
+                                {isRetrying ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Checking...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="mr-2 h-4 w-4" />
+                                        Refresh List
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -211,7 +332,7 @@ export default function InterviewGeneratedPage() {
                         </p>
                     </div>
 
-                    <div className="flex w-full md:w-auto gap-2 items-center">
+                    <div className="flex w-full md:w-auto gap-2 items-center flex-wrap">
                         <div className="relative flex-grow md:flex-grow-0 w-full md:w-64">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -223,6 +344,19 @@ export default function InterviewGeneratedPage() {
                         </div>
                         <Button onClick={() => router.push('/dashboard/generate-question-page')}>
                             New Interview
+                        </Button>
+                        <Button
+                            onClick={handleRetry}
+                            variant="outline"
+                            size="icon"
+                            disabled={isRetrying}
+                            title="Refresh interviews"
+                        >
+                            {isRetrying ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <RefreshCw className="h-4 w-4" />
+                            )}
                         </Button>
                     </div>
                 </div>
