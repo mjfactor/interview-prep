@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { toast } from 'sonner';
 import { z } from 'zod'
-import { X } from 'lucide-react'
+import { X, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { db, collection, addDoc, serverTimestamp } from '@/lib/firebase';
 import { useUser } from '@/hooks/firebase-hooks';
@@ -43,6 +43,7 @@ const techStackSuggestions = [
 export default function Page() {
     const router = useRouter()
     const { user } = useUser();
+
     // Form state
     const [jobRole, setJobRole] = useState<string>('Software Developer')
     const [experience, setExperience] = useState<string>('Mid-level')
@@ -53,6 +54,14 @@ export default function Page() {
     const [techStack, setTechStack] = useState<string[]>(['React', 'TypeScript'])
     const [techInput, setTechInput] = useState<string>('')
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
+
+    // Validation error states
+    const [jobRoleError, setJobRoleError] = useState<string>('')
+    const [techStackError, setTechStackError] = useState<string>('')
+    const [countError, setCountError] = useState<string>('')
+
+    // Overall submission state - tracks the entire submission process
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
     // Filtered suggestions based on current input
     const filteredSuggestions = techStackSuggestions.filter(tech =>
@@ -66,6 +75,8 @@ export default function Page() {
         if (trimmedTech && !techStack.includes(trimmedTech)) {
             setTechStack([...techStack, trimmedTech])
             setTechInput('')
+            // Clear any tech stack error when adding technologies
+            if (techStackError) setTechStackError('')
         }
     }
 
@@ -84,17 +95,50 @@ export default function Page() {
         }
     }
 
+    // Form validation function
+    const validateForm = (): boolean => {
+        let isValid = true
+
+        // Reset all errors first
+        setJobRoleError('')
+        setTechStackError('')
+        setCountError('')
+
+        // Validate job role
+        if (!jobRole.trim()) {
+            setJobRoleError('Job role is required')
+            isValid = false
+        }
+
+        // Validate tech stack
+        if (techStack.length === 0) {
+            setTechStackError('At least one technology is required')
+            isValid = false
+        }
+
+        // Validate count
+        if (count < 1 || count > 10) {
+            setCountError('Number of questions must be between 1 and 10')
+            isValid = false
+        }
+
+        return isValid
+    }
+
     // Using Vercel AI SDK's useObject to handle structured data generation
-    const { submit, isLoading: isGenerating } = useObject({
+    const { submit } = useObject({
         api: '/api/generate-question',
         schema: z.object({
             questions: z.array(z.string().describe('Interview questions')),
         }),
 
-        async onFinish({ object }) { // Add async here
+        async onFinish({ object }) {
             if (!object?.questions) {
                 console.error("No questions generated.");
-                // Optionally, show an error message to the user
+                setIsSubmitting(false); // Reset submission state if we get an empty response
+                toast.error('Failed to generate interview questions', {
+                    description: 'No questions were returned. Please try again.'
+                });
                 return;
             }
             try {
@@ -112,12 +156,18 @@ export default function Page() {
 
                 const docRef = await addDoc(collection(db, "interviewData"), interviewData);
                 router.push(`/dashboard/interview-page/${docRef.id}`);
+                // Note: We don't reset isSubmitting here because navigation will unmount this component
             } catch (dbError) {
                 console.error('Error storing questions in database:', dbError);
+                setIsSubmitting(false); // Reset submission state on error
+                toast.error('Failed to create interview', {
+                    description: 'There was an error saving your interview data. Please try again.'
+                });
             }
         },
         onError(error) {
             console.error("Error generating questions:", error);
+            setIsSubmitting(false); // Reset submission state on error
 
             // Check if the error is about missing API key
             if (error instanceof Error) {
@@ -147,6 +197,14 @@ export default function Page() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
+        // Validate form before submission
+        if (!validateForm()) {
+            return; // Stop if validation fails
+        }
+
+        // Set submission state to true at the start
+        setIsSubmitting(true);
+
         // Structure the data to pass to the AI API
         const requestBody = {
             jobRole,
@@ -154,7 +212,7 @@ export default function Page() {
             category,
             experience,
             techStack,
-            userId: user!.uid, // Use the user state
+            userId: user!.uid,
         };
 
         submit(requestBody);
@@ -170,13 +228,28 @@ export default function Page() {
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="jobRole">Job Role</Label>
+                                <Label htmlFor="jobRole" className={jobRoleError ? "text-destructive" : ""}>
+                                    Job Role
+                                </Label>
                                 <Input
                                     id="jobRole"
                                     value={jobRole}
-                                    onChange={(e) => setJobRole(e.target.value)}
+                                    onChange={(e) => {
+                                        setJobRole(e.target.value);
+                                        if (jobRoleError) setJobRoleError('');
+                                    }}
                                     placeholder="e.g. Frontend Developer"
+                                    className={jobRoleError ? "border-destructive" : ""}
+                                    disabled={isSubmitting}
+                                    aria-invalid={!!jobRoleError}
+                                    aria-describedby={jobRoleError ? "jobRoleError" : undefined}
                                 />
+                                {jobRoleError && (
+                                    <div id="jobRoleError" className="text-destructive text-sm flex items-center gap-1">
+                                        <AlertCircle size={14} />
+                                        <span>{jobRoleError}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -186,6 +259,7 @@ export default function Page() {
                                     value={experience}
                                     onChange={(e) => setExperience(e.target.value)}
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={isSubmitting}
                                 >
                                     {experienceLevels.map((level) => (
                                         <option key={level.value} value={level.value}>
@@ -202,6 +276,7 @@ export default function Page() {
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={isSubmitting}
                                 >
                                     {categories.map((cat) => (
                                         <option key={cat.value} value={cat.value}>
@@ -213,9 +288,11 @@ export default function Page() {
 
                             {/* Tech Stack Input */}
                             <div className="space-y-2">
-                                <Label htmlFor="techStack">Tech Stack</Label>
+                                <Label htmlFor="techStack" className={techStackError ? "text-destructive" : ""}>
+                                    Tech Stack
+                                </Label>
                                 <div className="relative">
-                                    <div className="flex flex-wrap gap-2 p-2 rounded-md border border-input bg-transparent mb-1">
+                                    <div className={`flex flex-wrap gap-2 p-2 rounded-md border ${techStackError ? "border-destructive" : "border-input"} bg-transparent mb-1`}>
                                         {techStack.map((tech) => (
                                             <div
                                                 key={tech}
@@ -226,6 +303,7 @@ export default function Page() {
                                                     type="button"
                                                     onClick={() => removeTech(tech)}
                                                     className="hover:bg-secondary-foreground/10 rounded-full p-0.5"
+                                                    disabled={isSubmitting}
                                                 >
                                                     <X size={12} />
                                                     <span className="sr-only">Remove {tech}</span>
@@ -238,6 +316,7 @@ export default function Page() {
                                             onChange={(e) => {
                                                 setTechInput(e.target.value)
                                                 setShowSuggestions(true)
+                                                if (techStackError) setTechStackError('');
                                             }}
                                             onKeyDown={handleKeyDown}
                                             onBlur={() => {
@@ -247,11 +326,14 @@ export default function Page() {
                                             onFocus={() => setShowSuggestions(true)}
                                             placeholder="Add technology..."
                                             className="flex-grow border-0 shadow-none focus-visible:ring-0 p-0 h-7 min-w-[120px]"
+                                            disabled={isSubmitting}
+                                            aria-invalid={!!techStackError}
+                                            aria-describedby={techStackError ? "techStackError" : undefined}
                                         />
                                     </div>
 
                                     {/* Tech suggestions dropdown */}
-                                    {showSuggestions && techInput.length > 0 && filteredSuggestions.length > 0 && (
+                                    {showSuggestions && techInput.length > 0 && filteredSuggestions.length > 0 && !isSubmitting && (
                                         <div className="absolute z-10 w-full mt-1 rounded-md border border-input bg-background shadow-md">
                                             <ul className="py-1">
                                                 {filteredSuggestions.map((suggestion) => (
@@ -274,27 +356,48 @@ export default function Page() {
                                     <p className="text-xs text-muted-foreground mt-1">
                                         Press Enter to add a technology or select from suggestions
                                     </p>
+                                    {techStackError && (
+                                        <div id="techStackError" className="text-destructive text-sm flex items-center gap-1 mt-1">
+                                            <AlertCircle size={14} />
+                                            <span>{techStackError}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="count">Number of Questions</Label>
+                                <Label htmlFor="count" className={countError ? "text-destructive" : ""}>
+                                    Number of Questions
+                                </Label>
                                 <Input
                                     id="count"
                                     type="number"
                                     min="1"
                                     max="10"
                                     value={count}
-                                    onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                                    onChange={(e) => {
+                                        setCount(parseInt(e.target.value) || 1);
+                                        if (countError) setCountError('');
+                                    }}
+                                    className={countError ? "border-destructive" : ""}
+                                    disabled={isSubmitting}
+                                    aria-invalid={!!countError}
+                                    aria-describedby={countError ? "countError" : undefined}
                                 />
+                                {countError && (
+                                    <div id="countError" className="text-destructive text-sm flex items-center gap-1">
+                                        <AlertCircle size={14} />
+                                        <span>{countError}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <Button
                                 type="submit"
                                 className="w-full"
-                                disabled={isGenerating}
+                                disabled={isSubmitting}
                             >
-                                {isGenerating ? 'Generating...' : 'Generate Questions'}
+                                {isSubmitting ? 'Processing...' : 'Generate Questions'}
                             </Button>
                         </form>
                     </div>
