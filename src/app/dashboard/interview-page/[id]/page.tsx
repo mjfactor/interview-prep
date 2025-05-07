@@ -180,11 +180,50 @@ export default function InterviewPage() {
 
         const handleError = (e: unknown) => {
             setIsCalling(false);
-            setStatusMessage("An error occurred. Please try again.");
+
+            // Provide more specific error message based on the error type
+            let errorMessage = "An error occurred during the interview. Please try again.";
+            let errorDetails = "";
+
             console.error("Vapi error:", e);
 
+            // Try to parse the error details if it's an object
+            if (e && typeof e === 'object') {
+                try {
+                    // Check for common Vapi error structures
+                    if ('error' in e && typeof e.error === 'object' && e.error) {
+                        const err = e.error as any;
+                        if (err.type === 'ejected' && err.msg) {
+                            errorMessage = `Interview ended: ${err.msg}`;
+                            errorDetails = "The meeting was terminated by the server. This may be due to invalid configuration or usage limits.";
+                        } else if (err.message || err.msg) {
+                            errorMessage = err.message || err.msg;
+                        }
+                    } else if ('errorMsg' in e && typeof e.errorMsg === 'string') {
+                        errorMessage = e.errorMsg;
+                    } else if ('message' in e && typeof e.message === 'string') {
+                        errorMessage = e.message;
+                    }
+
+                    // Add action ID or call client ID if available for troubleshooting
+                    if ('callClientId' in e && typeof e.callClientId === 'string') {
+                        errorDetails = `Call ID: ${e.callClientId}`;
+                    }
+                } catch (parseError) {
+                    console.error("Error parsing Vapi error:", parseError);
+                }
+            }
+
+            setStatusMessage(`Error: ${errorMessage}`);
+
             toast.error('Interview error', {
-                description: 'An error occurred during the interview. Please try again.'
+                description: errorMessage,
+                ...(errorDetails && {
+                    action: {
+                        label: 'Details',
+                        onClick: () => toast.message('Error Details', { description: errorDetails })
+                    }
+                })
             });
         };
 
@@ -306,8 +345,8 @@ export default function InterviewPage() {
                     language: "en-US",
                 },
                 voice: {
-                    provider: "eleven_labs", // Using ElevenLabs for better voice quality
-                    voiceId: "Rachel", // Professional female voice
+                    provider: "vapi", // Using ElevenLabs for better voice quality
+                    voiceId: "Lily", // Using a documented valid voice ID for 11labs
                 },
                 model: {
                     provider: "openai",
