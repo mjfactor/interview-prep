@@ -14,7 +14,8 @@ import {
     query,
     where,
     orderBy,
-    deleteDoc
+    deleteDoc,
+    updateDoc
 } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -55,10 +56,11 @@ export {
     query,
     where,
     orderBy,
-    deleteDoc
+    deleteDoc,
+    updateDoc,
+    Timestamp
 };
 
 export type {
-    User,
-    Timestamp
+    User
 };
