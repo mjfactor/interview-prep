@@ -26,8 +26,7 @@ const experienceLevels = [
 const categories = [
     { value: "technical", label: "Technical" },
     { value: "behavioral", label: "Behavioral" },
-    { value: "system-design", label: "System Design" },
-    { value: "problem-solving", label: "Problem Solving" },
+    { value: "critical-thinking", label: "Critical Thinking" },
     { value: "leadership", label: "Leadership" },
 ]
 

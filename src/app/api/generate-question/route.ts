@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         });
 
         const prompt = `Generate ${count || 3} realistic interview ${category || 'technical'} questions based on the tech stack: ${techStack?.join(', ')} for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 
-                        Make sure the questions are challenging but appropriate for the experience level.`;
+                     IMPORTANT: These questions are for voice interview practice only, so do NOT include interactive tasks like "create a function", "write code", or "draw a diagram". Focus on questions that can be answered verbally.`;
 
         // Use generateObject instead of streamObject for a complete response
         const { object } = await generateObject({
