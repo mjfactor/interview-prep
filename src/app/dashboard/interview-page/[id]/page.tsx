@@ -10,16 +10,15 @@ import { db, doc, getDoc, Timestamp } from '@/lib/firebase'; // Import necessary
 import { useUser } from '@/hooks/firebase-hooks'; // Import useUser hook
 import { useParams, useRouter } from 'next/navigation';
 
-// Define an interface for the interview data structure
+// Define an interface for the practice session data structure
 interface InterviewData {
     name: string;
     jobRole: string;
     experience: string;
-    category: string;
-    techStack: string[];
     questions: string[];
     createdAt: Timestamp;
     uid: string;
+    type?: string; // Optional field for backward compatibility
 }
 
 export default function InterviewPage() {
@@ -27,7 +26,7 @@ export default function InterviewPage() {
     const router = useRouter();
     const { user } = useUser(); // Get current authenticated user
     const [isCalling, setIsCalling] = useState(false);
-    const [statusMessage, setStatusMessage] = useState("Loading interview details...");
+    const [statusMessage, setStatusMessage] = useState("Loading practice session details...");
     const [interviewData, setInterviewData] = useState<InterviewData | null>(null);
     const [isLoading, setIsLoading] = useState(true); // Add loading state
     const [vapi, setVapi] = useState<any>(null);
@@ -54,7 +53,7 @@ export default function InterviewPage() {
                 if (error instanceof Error) {
                     if (error.message.includes('Vapi API key not found')) {
                         toast.error('Vapi API key not found', {
-                            description: 'Please add your Vapi API key in settings to use the interview feature.',
+                            description: 'Please add your Vapi API key in settings to use the practice session feature.',
                             action: {
                                 label: 'Settings',
                                 onClick: () => router.push('/dashboard/api-keys')
@@ -78,7 +77,7 @@ export default function InterviewPage() {
     useEffect(() => {
         const fetchInterviewData = async () => {
             if (!id) {
-                setStatusMessage("Error: No interview ID provided.");
+                setStatusMessage("Error: No practice session ID provided.");
                 setIsLoading(false);
                 return;
             }
@@ -88,19 +87,19 @@ export default function InterviewPage() {
 
                 if (docSnap.exists()) {
                     setInterviewData(docSnap.data() as InterviewData);
-                    setStatusMessage("Press the microphone to start your interview.");
+                    setStatusMessage("Press the microphone to start your practice session.");
                 } else {
                     console.error("No such document!");
-                    setStatusMessage("Error: Interview not found.");
-                    toast.error('Interview not found', {
-                        description: 'The requested interview could not be found.'
+                    setStatusMessage("Error: Practice session not found.");
+                    toast.error('Practice session not found', {
+                        description: 'The requested practice session could not be found.'
                     });
                 }
             } catch (error) {
-                console.error("Error fetching interview data:", error);
-                setStatusMessage("Error loading interview details.");
-                toast.error('Failed to load interview', {
-                    description: 'There was a problem loading the interview data.'
+                console.error("Error fetching practice session data:", error);
+                setStatusMessage("Error loading practice session details.");
+                toast.error('Failed to load practice session', {
+                    description: 'There was a problem loading the practice session data.'
                 });
             } finally {
                 setIsLoading(false);
@@ -132,8 +131,8 @@ export default function InterviewPage() {
             setStatusMessage("An error occurred. Please try again.");
             console.error("Vapi error:", e);
 
-            toast.error('Interview error', {
-                description: 'An error occurred during the interview. Please try again.'
+            toast.error('Practice session error', {
+                description: 'An error occurred during the practice session. Please try again.'
             });
         };
 
@@ -154,17 +153,18 @@ export default function InterviewPage() {
         setStatusMessage("Starting call...");
         try {
             // Construct the system prompt using fetched data
-            const systemPrompt = `You are a interviewer named Eubert from a certain company conducting a practice for a ${interviewData.experience} ${interviewData.jobRole} position.
-            The interview focuses on ${interviewData.category} topics, specifically related to the following technologies: ${interviewData.techStack.join(', ')}.
-            Start by introducing yourself briefly. Then, layout the users inputted information and explain the interview process.
-            Then, ask the candidate the following questions one by one, waiting for their response before moving to the next:
+            const systemPrompt = `You are a behavioral interview coach named Eubert helping candidates practice for a ${interviewData.experience} ${interviewData.jobRole} position.
+            Your role is to guide the candidate through behavioral questions using the STAR method (Situation, Task, Action, Result).
+            Start by introducing yourself briefly and explaining the STAR method format.
+            Then, ask the candidate the following behavioral questions one by one, waiting for their response before moving to the next:
             ${interviewData.questions.map((q, index) => `${index + 1}. ${q}`).join('\n')}
-            Keep the conversation natural and provide brief feedback or follow-up questions if appropriate, but primarily focus on asking the prepared questions.
-            Conclude the interview after the last question.`;
+            After each response, provide brief feedback on how well they followed the STAR format and encourage them to elaborate on any missing components.
+            Keep the conversation supportive and educational, focusing on helping them improve their behavioral interview skills.
+            Conclude the session after the last question with encouragement and summary feedback.`;
 
             await vapi.start({
                 name: "Lily",
-                firstMessage: `Hello ${interviewData.name}! I'm Lily, your interviewer for Today. Ready to begin?`, // Adjusted first message
+                firstMessage: `Hello ${interviewData.name}! I'm Lily, your behavioral interview coach. Ready to practice some STAR method questions?`, // Updated first message
                 transcriber: {
                     provider: "deepgram",
                     model: "nova-3",
@@ -191,8 +191,8 @@ export default function InterviewPage() {
             setIsCalling(false); // Reset state on failure
             setStatusMessage("Failed to start the call. Please try again.");
 
-            toast.error('Failed to start interview', {
-                description: 'Could not start the interview. Please try again.'
+            toast.error('Failed to start practice session', {
+                description: 'Could not start the practice session. Please try again.'
             });
         }
     }
@@ -209,10 +209,10 @@ export default function InterviewPage() {
             <div className="flex flex-col items-center justify-center pt-40">
                 <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
                     <CardHeader>
-                        <CardTitle className="text-center text-2xl font-bold text-gray-800 dark:text-white">AI Interview Practice</CardTitle>
+                        <CardTitle className="text-center text-2xl font-bold text-gray-800 dark:text-white">STAR Method Practice</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center space-y-6 pt-1 pb-8">
-                        <p className="text-center text-gray-600 dark:text-gray-300">Initializing interview system...</p>
+                        <p className="text-center text-gray-600 dark:text-gray-300">Initializing practice session system...</p>
                     </CardContent>
                 </Card>
             </div>
@@ -223,7 +223,7 @@ export default function InterviewPage() {
         <div className="flex flex-col items-center justify-center pt-40">
             <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
                 <CardHeader>
-                    <CardTitle className="text-center text-2xl font-bold text-gray-800 dark:text-white">AI Interview Practice</CardTitle>
+                    <CardTitle className="text-center text-2xl font-bold text-gray-800 dark:text-white">STAR Method Practice</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center space-y-6 pt-1 pb-8">
                     {/* Microphone/Stop Button */}
@@ -238,7 +238,7 @@ export default function InterviewPage() {
                         disabled={isLoading || (!isCalling && statusMessage === "Starting call...") || (!interviewData && !isLoading) || !vapi}
                     >
                         {isCalling ? <PhoneOff className="w-10 h-10" /> : <Mic className="w-10 h-10" />}
-                        <span className="sr-only">{isCalling ? "Stop Interview" : "Start Interview"}</span>
+                        <span className="sr-only">{isCalling ? "Stop Practice Session" : "Start Practice Session"}</span>
                     </Button>
                     <p className="text-center text-gray-600 dark:text-gray-300">{statusMessage}</p>
                 </CardContent>

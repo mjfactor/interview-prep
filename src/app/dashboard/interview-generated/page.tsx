@@ -49,13 +49,12 @@ interface InterviewData {
     name: string
     jobRole: string
     experience: string
-    category: string
-    techStack: string[]
     questions: string[]
     createdAt: {
         toDate: () => Date
     }
     uid: string
+    type?: string // Optional type field to distinguish behavioral-star from old data
 }
 
 export default function InterviewGeneratedPage() {
@@ -98,15 +97,15 @@ export default function InterviewGeneratedPage() {
 
             // Show success message when retrying
             if (isRetrying) {
-                toast.success("Interviews refreshed", {
-                    description: `Found ${interviewList.length} interview${interviewList.length !== 1 ? 's' : ''}`
+                toast.success("Practice sessions refreshed", {
+                    description: `Found ${interviewList.length} practice session${interviewList.length !== 1 ? 's' : ''}`
                 })
             }
         } catch (error) {
-            console.error("Error fetching interviews:", error)
-            setError("Failed to load interviews. Please try again.")
-            toast.error("Failed to load interviews", {
-                description: "There was a problem retrieving your interview data."
+            console.error("Error fetching practice sessions:", error)
+            setError("Failed to load practice sessions. Please try again.")
+            toast.error("Failed to load practice sessions", {
+                description: "There was a problem retrieving your practice session data."
             })
         } finally {
             setLoading(false)
@@ -146,8 +145,7 @@ export default function InterviewGeneratedPage() {
         const lowerCaseSearch = searchTerm.toLowerCase()
         const filtered = interviews.filter(interview =>
             interview.jobRole.toLowerCase().includes(lowerCaseSearch) ||
-            interview.category.toLowerCase().includes(lowerCaseSearch) ||
-            interview.techStack.some(tech => tech.toLowerCase().includes(lowerCaseSearch))
+            interview.experience.toLowerCase().includes(lowerCaseSearch)
         )
 
         setFilteredInterviews(filtered)
@@ -170,13 +168,13 @@ export default function InterviewGeneratedPage() {
             setInterviews(updatedInterviews)
             setFilteredInterviews(filteredInterviews.filter(interview => interview.id !== deleteId))
 
-            toast.success("Interview deleted", {
-                description: "The interview has been successfully deleted."
+            toast.success("Practice session deleted", {
+                description: "The practice session has been successfully deleted."
             })
         } catch (error) {
-            console.error("Error deleting interview:", error)
-            toast.error("Failed to delete interview", {
-                description: "There was a problem deleting this interview."
+            console.error("Error deleting practice session:", error)
+            toast.error("Failed to delete practice session", {
+                description: "There was a problem deleting this practice session."
             })
         } finally {
             setDeleteId(null)
@@ -190,7 +188,7 @@ export default function InterviewGeneratedPage() {
             <div className="container mx-auto px-4 py-8">
                 <div className="flex flex-col space-y-4">
                     <div className="flex justify-between items-center">
-                        <h1 className="text-3xl font-bold">Your Interviews</h1>
+                        <h1 className="text-3xl font-bold">Your STAR Method Practice</h1>
                     </div>
 
                     {showRetryButton && (
@@ -267,7 +265,7 @@ export default function InterviewGeneratedPage() {
                                 variant="outline"
                                 size="lg"
                             >
-                                Generate New Interview
+                                Generate New Practice Session
                             </Button>
                         </div>
                     </CardContent>
@@ -285,16 +283,16 @@ export default function InterviewGeneratedPage() {
                         <div className="rounded-full bg-primary/10 p-4 mb-4">
                             <MessageSquare className="h-8 w-8 text-primary" />
                         </div>
-                        <h3 className="text-2xl font-medium mb-2">No interviews found</h3>
+                        <h3 className="text-2xl font-medium mb-2">No practice sessions found</h3>
                         <p className="text-muted-foreground text-center max-w-md mb-6">
-                            You haven't generated any interview questions yet. Generate your first interview to get started!
+                            You haven't generated any behavioral interview questions yet. Create your first STAR method practice session to get started!
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Button
                                 onClick={() => router.push('/dashboard/generate-question-page')}
                                 size="lg"
                             >
-                                Generate Interview
+                                Generate Practice Session
                             </Button>
                             <Button
                                 onClick={handleRetry}
@@ -326,9 +324,9 @@ export default function InterviewGeneratedPage() {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold">Your Interviews</h1>
+                        <h1 className="text-3xl font-bold">Your STAR Method Practice</h1>
                         <p className="text-muted-foreground mt-1">
-                            {filteredInterviews.length} interview{filteredInterviews.length !== 1 ? 's' : ''} available
+                            {filteredInterviews.length} behavioral interview session{filteredInterviews.length !== 1 ? 's' : ''} available
                         </p>
                     </div>
 
@@ -336,21 +334,21 @@ export default function InterviewGeneratedPage() {
                         <div className="relative flex-grow md:flex-grow-0 w-full md:w-64">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search interviews..."
+                                placeholder="Search by job role or experience..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-9 w-full"
                             />
                         </div>
                         <Button onClick={() => router.push('/dashboard/generate-question-page')}>
-                            New Interview
+                            New Practice Session
                         </Button>
                         <Button
                             onClick={handleRetry}
                             variant="outline"
                             size="icon"
                             disabled={isRetrying}
-                            title="Refresh interviews"
+                            title="Refresh practice sessions"
                         >
                             {isRetrying ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -404,20 +402,11 @@ export default function InterviewGeneratedPage() {
                             <CardContent className="pb-2">
                                 <div className="flex flex-wrap gap-2 mb-3">
                                     <Badge variant="outline">{interview.experience}</Badge>
-                                    <Badge variant="secondary">{interview.category}</Badge>
+                                    <Badge variant="secondary">STAR Method</Badge>
                                 </div>
-                                <div className="flex flex-wrap gap-1.5 mt-2">
-                                    {interview.techStack.slice(0, 3).map((tech) => (
-                                        <Badge key={tech} variant="outline" className="bg-primary/5">
-                                            {tech}
-                                        </Badge>
-                                    ))}
-                                    {interview.techStack.length > 3 && (
-                                        <Badge variant="outline" className="bg-primary/5">
-                                            +{interview.techStack.length - 3}
-                                        </Badge>
-                                    )}
-                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    Behavioral questions for practicing the STAR method
+                                </p>
                             </CardContent>
                             <CardFooter className="pt-2">
                                 <div className="flex w-full justify-between items-center text-sm text-muted-foreground">
@@ -425,9 +414,8 @@ export default function InterviewGeneratedPage() {
                                         <MessageSquare className="h-3.5 w-3.5 mr-1" />
                                         {interview.questions.length} questions
                                     </span>
-                                    <span className="flex items-center">
-                                        <Code className="h-3.5 w-3.5 mr-1" />
-                                        {interview.techStack.length} technologies
+                                    <span className="text-sm">
+                                        Behavioral Practice
                                     </span>
                                 </div>
                             </CardFooter>
@@ -445,8 +433,7 @@ export default function InterviewGeneratedPage() {
                                         <TableHead>Job Role</TableHead>
                                         <TableHead>Date Created</TableHead>
                                         <TableHead>Experience Level</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Technologies</TableHead>
+                                        <TableHead>Type</TableHead>
                                         <TableHead>Questions</TableHead>
                                         <TableHead className="w-[80px]"></TableHead>
                                     </TableRow>
@@ -469,21 +456,7 @@ export default function InterviewGeneratedPage() {
                                                 <Badge variant="outline">{interview.experience}</Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="secondary">{interview.category}</Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                                    {interview.techStack.slice(0, 2).map((tech) => (
-                                                        <Badge key={tech} variant="outline" className="bg-primary/5">
-                                                            {tech}
-                                                        </Badge>
-                                                    ))}
-                                                    {interview.techStack.length > 2 && (
-                                                        <Badge variant="outline" className="bg-primary/5">
-                                                            +{interview.techStack.length - 2}
-                                                        </Badge>
-                                                    )}
-                                                </div>
+                                                <Badge variant="secondary">STAR Method</Badge>
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
                                                 {interview.questions.length} questions
@@ -514,9 +487,9 @@ export default function InterviewGeneratedPage() {
                 <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Delete Interview</DialogTitle>
+                            <DialogTitle>Delete Practice Session</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to delete this interview? This action cannot be undone.
+                                Are you sure you want to delete this practice session? This action cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>

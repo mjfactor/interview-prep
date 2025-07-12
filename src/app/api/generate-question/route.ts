@@ -8,19 +8,15 @@ export const maxDuration = 30;
 
 // Define the types for request body
 type RequestBody = {
-    name?: string;
     jobRole?: string;
     experience?: string;
-    category?: string;
-    count?: number;
-    techStack?: string[];
     userId?: string
 };
 
 export async function POST(req: Request) {
     try {
         // Parse request body 
-        const { jobRole, count, category, experience, techStack, userId }: RequestBody = await req.json();
+        const { jobRole, experience, userId }: RequestBody = await req.json();
 
         // Get the user's Google API key from Firebase if userId is provided
         let apiKey = '';
@@ -45,8 +41,11 @@ export async function POST(req: Request) {
             apiKey
         });
 
-        const prompt = `Generate ${count || 3} realistic interview ${category || 'technical'} questions based on the tech stack: ${techStack?.join(', ')} for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 
-                     IMPORTANT: These questions are for voice interview practice only, so do NOT include interactive tasks like "create a function", "write code", or "draw a diagram". Focus on questions that can be answered verbally.`;
+        const prompt = `Generate 5 behavioral interview questions for a ${experience || 'Mid-level'} ${jobRole || 'Software Developer'} position. 
+                     These questions should be designed for STAR method practice (Situation, Task, Action, Result).
+                     Focus on questions that start with "Tell me about a time when..." or "Describe a situation where..." 
+                     The questions should cover common workplace scenarios like teamwork, problem-solving, leadership, conflict resolution, and achievements.
+                     Make sure the questions are relevant to the experience level and job role specified.`;
 
         // Use generateObject instead of streamObject for a complete response
         const { object } = await generateObject({
